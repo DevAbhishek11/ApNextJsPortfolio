@@ -88,6 +88,24 @@ Compose mounts two persistent volumes that are **required**:
 
 Any container host with persistent volumes works: your own VPS, Railway, Render, Fly.io, Hetzner…
 
+## 🔐 Locked out of the admin?
+
+The admin password is **not** in the repo — it lives in `data/users.json` (or the
+Docker volume). If you changed it and forgot it, reset from the server:
+
+```bash
+# local / VPS
+npm run reset-admin                              # back to the documented default
+node scripts/reset-admin.mjs --password=NewSecret123
+
+# Docker
+docker compose exec portfolio node scripts/reset-admin.mjs --password=NewSecret123
+```
+
+This bumps the session token version, so every existing session is invalidated,
+and it also recreates the admin account if `users.json` is missing or corrupt.
+The login page's *"Can't sign in?"* panel lists the other common causes.
+
 ## ⚠️ Deployment caveats — read this
 
 1. **Not a serverless app.** Do **not** deploy to Vercel/Netlify serverless: storage is the

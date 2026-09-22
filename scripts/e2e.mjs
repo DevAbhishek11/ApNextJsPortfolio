@@ -430,6 +430,31 @@ async function main() {
   });
   ok(finalLogin.status === 200, "  final login with restored password", `got ${finalLogin.status}`);
 
+  // reset-admin script end-to-end: scramble password → old creds fail →
+  // script restores → default creds work again.
+  if (process.env.DATA_SYNC_PATH) {
+    // (In-sandbox runs only: mutate the data dir the server reads.)
+    const { execSync } = await import("node:child_process");
+    execSync(`node scripts/reset-admin.mjs --password=Scrambled999!`, {
+      env: { ...process.env, DATA_DIR: process.env.DATA_SYNC_PATH },
+    });
+    const stale = await apiReq("/api/auth/login", {
+      method: "POST", json: { email: EMAIL, password: PASSWORD }, spoofIp: "10.87.4.60",
+    });
+    ok(stale.status === 401, "reset-admin scramble → old password rejected", `got ${stale.status}`);
+    const fresh = await apiReq("/api/auth/login", {
+      method: "POST", json: { email: EMAIL, password: "Scrambled999!" }, spoofIp: "10.87.4.61",
+    });
+    ok(fresh.status === 200, "  scrambled password accepted", `got ${fresh.status}`);
+    execSync(`node scripts/reset-admin.mjs`, { env: { ...process.env, DATA_DIR: process.env.DATA_SYNC_PATH } });
+    const restored = await apiReq("/api/auth/login", {
+      method: "POST", json: { email: EMAIL, password: PASSWORD }, spoofIp: "10.87.4.62",
+    });
+    ok(restored.status === 200, "reset-admin → default credentials restored", `got ${restored.status}`);
+    // re-login so the test suite finishes authed with a valid tokenVersion
+    await apiReq("/api/auth/login", { method: "POST", json: { email: EMAIL, password: PASSWORD }, spoofIp: "10.87.4.63" });
+  }
+
   // ---------------------------------------------------------------- summary
   const total = passed + failed;
   console.log(`\n${"─".repeat(52)}`);

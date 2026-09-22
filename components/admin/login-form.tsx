@@ -107,8 +107,9 @@ function LoginFormInner() {
         <ul className="mt-3 space-y-1.5 rounded-control bg-adm-surface-2 p-3.5 text-[0.72rem] leading-relaxed text-adm-muted">
           <li>• First boot? Default credentials are documented in the repo README footer of <code className="font-mono">.env.example</code> — change them afterwards.</li>
           <li>• Check <code className="font-mono">JWT_SECRET</code> is set and ≥ 16 chars, then restart the server.</li>
+          <li>• Changed the password before and forgot it? Run <code className="font-mono">npm run reset-admin</code> on the server (Docker: <code className="font-mono">docker compose exec portfolio node scripts/reset-admin.mjs</code>).</li>
           <li>• Locked out by rate limiting? Wait for the timer in the error, or restart the Node process.</li>
-          <li>• Full reset: stop the server, delete <code className="font-mono">data/users.json</code>, restart — the admin account re-seeds.</li>
+          <li>• Full reset: <code className="font-mono">npm run reset-admin</code> re-creates the account even if <code className="font-mono">data/users.json</code> is missing or corrupt.</li>
         </ul>
       </details>
     </form>

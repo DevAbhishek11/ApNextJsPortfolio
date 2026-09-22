@@ -28,8 +28,8 @@ export function badRequest(message = "Invalid request.", fields?: Record<string,
   return fail(400, "VALIDATION_ERROR", message, fields);
 }
 
-export function unauthorized(message = "Authentication required.") {
-  return fail(401, "UNAUTHORIZED", message);
+export function unauthorized(message = "Authentication required.", fields?: Record<string, string>) {
+  return fail(401, "UNAUTHORIZED", message, fields);
 }
 
 export function forbidden(message = "You do not have permission to perform this action.") {

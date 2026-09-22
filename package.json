@@ -10,7 +10,8 @@
     "seed": "node scripts/seed.mjs",
     "typecheck": "tsc --noEmit",
     "test:e2e": "node scripts/e2e.mjs",
-    "placeholders": "node scripts/make-placeholders.mjs"
+    "placeholders": "node scripts/make-placeholders.mjs",
+    "reset-admin": "node scripts/reset-admin.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

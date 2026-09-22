@@ -44,6 +44,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 # (lib/db/store.ts → SEED_FALLBACK_DIR).
 COPY --from=builder --chown=nextjs:nodejs /app/data/seed /app/seed-defaults
 
+# Recovery/utility scripts (admin password reset, seed regeneration).
+COPY --from=builder --chown=nextjs:nodejs /app/scripts /app/scripts
+
 # Writable runtime state: JSON data store + uploaded media + chunked build
 # uploads. Seed content is auto-created from lib/db/defaults on first boot.
 RUN mkdir -p /app/data /app/public/uploads && \

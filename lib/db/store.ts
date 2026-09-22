@@ -72,6 +72,19 @@ async function ensureSeeded(name: string): Promise<void> {
   }
 }
 
+/** Overwrite a runtime data file with its committed seed (self-healing). */
+export async function reseedCollection(name: string): Promise<boolean> {
+  const target = dataPath(name);
+  const seedName = name.replace(/\.json$/, ".seed.json");
+  for (const source of [path.join(SEED_DIR, seedName), path.join(SEED_FALLBACK_DIR, seedName)]) {
+    try {
+      await fs.copyFile(source, target);
+      return true;
+    } catch { /* try next */ }
+  }
+  return false;
+}
+
 /** Read and parse a JSON data file. Returns `fallback` if unreadable/corrupt. */
 export async function readJson<T>(name: string, fallback: T): Promise<T> {
   await ensureSeeded(name);
