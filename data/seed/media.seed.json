@@ -1,0 +1,18 @@
+[
+  { "id": "med_inv_feature", "filename": "invoice-system-feature.jpg", "url": "/seed/projects/invoice-system/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-02-10T09:00:00.000Z" },
+  { "id": "med_nextgentrip_feature", "filename": "nextgentrip-feature.jpg", "url": "/seed/projects/nextgentrip/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2024-09-01T09:00:00.000Z" },
+  { "id": "med_bento_feature", "filename": "bens-bento-feature.jpg", "url": "/seed/projects/bens-bento/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2025-03-05T09:00:00.000Z" },
+  { "id": "med_krishna_feature", "filename": "krishna-feature.jpg", "url": "/seed/projects/krishna-invoice/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2025-11-20T09:00:00.000Z" },
+  { "id": "med_event_feature", "filename": "event-portal-feature.jpg", "url": "/seed/projects/event-portal/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2024-06-12T09:00:00.000Z" },
+  { "id": "med_saf_feature", "filename": "saf-demands-feature.jpg", "url": "/seed/projects/saf-demands/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2024-03-18T09:00:00.000Z" },
+  { "id": "med_evernorth_feature", "filename": "evernorth-feature.jpg", "url": "/seed/projects/evernorth/feature.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2024-01-15T09:00:00.000Z" },
+  { "id": "med_g1", "filename": "dashboard-analytics.jpg", "url": "/seed/gallery/g1.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" },
+  { "id": "med_g2", "filename": "dashboard-team.jpg", "url": "/seed/gallery/g2.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" },
+  { "id": "med_g3", "filename": "dashboard-chat.jpg", "url": "/seed/gallery/g3.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" },
+  { "id": "med_g4", "filename": "dashboard-payments.jpg", "url": "/seed/gallery/g4.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" },
+  { "id": "med_blog_realtime", "filename": "blog-realtime-systems.jpg", "url": "/seed/blog/realtime-systems.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-08-14T09:00:00.000Z" },
+  { "id": "med_blog_nextjs", "filename": "blog-nextjs-production.jpg", "url": "/seed/blog/nextjs-production.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-06-21T09:00:00.000Z" },
+  { "id": "med_blog_figma", "filename": "blog-figma-to-react.jpg", "url": "/seed/blog/figma-to-react.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-04-02T09:00:00.000Z" },
+  { "id": "med_avatar", "filename": "avatar.jpg", "url": "/seed/avatar.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" },
+  { "id": "med_og", "filename": "og-default.jpg", "url": "/seed/og-default.jpg", "mimeType": "image/jpeg", "size": 0, "source": "seed", "createdAt": "2026-01-01T09:00:00.000Z" }
+]

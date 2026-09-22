@@ -1,0 +1,11 @@
+[
+  {
+    "id": "usr_admin_abhishek",
+    "email": "dev.abhishek.ap11@gmail.com",
+    "passwordHash": "$2b$12$PD4yJDdm7Sh.1Qe4sqYIJ.XE1y1cQvRuZRswvggRTrRcE7eD3/H32",
+    "name": "Abhishek Prajapati",
+    "role": "admin",
+    "tokenVersion": 1,
+    "createdAt": "2026-01-01T10:00:00.000Z"
+  }
+]

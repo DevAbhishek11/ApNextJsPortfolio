@@ -1,0 +1,24 @@
+# Build context hygiene
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Runtime state — lives in mounted volumes, never in the image
+data
+public/uploads
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+
+# Misc
+*.log
+.DS_Store
+coverage
+.vscode
+.idea

@@ -1,0 +1,87 @@
+[
+  {
+    "category": "Frontend",
+    "order": 1,
+    "skills": [
+      { "name": "React.js", "level": 5 },
+      { "name": "Next.js (SSR/SSG/ISR)", "level": 5 },
+      { "name": "React Native (Expo)", "level": 4 },
+      { "name": "TypeScript", "level": 5 },
+      { "name": "JavaScript (ES2022+)", "level": 5 },
+      { "name": "Tailwind CSS", "level": 5 },
+      { "name": "Redux", "level": 4 },
+      { "name": "HTML5", "level": 5 },
+      { "name": "CSS3", "level": 5 }
+    ]
+  },
+  {
+    "category": "Backend",
+    "order": 2,
+    "skills": [
+      { "name": "Node.js", "level": 5 },
+      { "name": "Express.js", "level": 5 },
+      { "name": "PHP (Laravel, Laravel Octane, CodeIgniter)", "level": 4 },
+      { "name": "REST API Design", "level": 5 },
+      { "name": "Microservices Architecture", "level": 4 },
+      { "name": "JWT", "level": 5 },
+      { "name": "OAuth 2.0", "level": 4 }
+    ]
+  },
+  {
+    "category": "Databases",
+    "order": 3,
+    "skills": [
+      { "name": "MongoDB (Mongoose)", "level": 5 },
+      { "name": "MySQL", "level": 4 },
+      { "name": "PostgreSQL", "level": 4 },
+      { "name": "Redis (basic)", "level": 3 }
+    ]
+  },
+  {
+    "category": "Cloud & DevOps",
+    "order": 4,
+    "skills": [
+      { "name": "AWS EC2", "level": 4 },
+      { "name": "AWS S3", "level": 4 },
+      { "name": "GitHub Actions", "level": 4 },
+      { "name": "CI/CD Pipelines", "level": 4 },
+      { "name": "Docker (basic)", "level": 3 },
+      { "name": "Linux/Ubuntu", "level": 4 },
+      { "name": "Nginx", "level": 4 },
+      { "name": "Git", "level": 5 },
+      { "name": "GitLab", "level": 4 }
+    ]
+  },
+  {
+    "category": "Real-Time",
+    "order": 5,
+    "skills": [
+      { "name": "Socket.io", "level": 5 },
+      { "name": "WebSockets", "level": 5 },
+      { "name": "Twilio API (OTP, SMS, Voice)", "level": 4 }
+    ]
+  },
+  {
+    "category": "AI & APIs",
+    "order": 6,
+    "skills": [
+      { "name": "OpenAI API (GPT integration)", "level": 4 },
+      { "name": "TBO Travel API", "level": 4 },
+      { "name": "Airtable API", "level": 4 },
+      { "name": "Stripe", "level": 4 },
+      { "name": "Razorpay", "level": 4 }
+    ]
+  },
+  {
+    "category": "Testing & Tools",
+    "order": 7,
+    "skills": [
+      { "name": "Jest", "level": 4 },
+      { "name": "Postman", "level": 5 },
+      { "name": "Figma (Figma-to-code)", "level": 4 },
+      { "name": "Webpack", "level": 4 },
+      { "name": "Vite", "level": 5 },
+      { "name": "npm/yarn", "level": 5 }
+    ]
+  }
+]

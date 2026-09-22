@@ -1,0 +1,41 @@
+[
+  {
+    "id": "exp_gigsoft",
+    "role": "MERN Stack Developer",
+    "company": "Gigsoft Pro",
+    "location": "Mohali, Punjab",
+    "startDate": "2025-11",
+    "endDate": "2026-09",
+    "current": false,
+    "summary": "Building production invoicing and merchant platforms on the MERN stack, shipping both web and cross-platform mobile applications.",
+    "achievements": [
+      "Own end-to-end delivery of merchant invoicing features across Next.js web apps and React Native mobile apps for e-vehicle dealerships.",
+      "Design and maintain RESTful services and real-time WebSocket channels powering live EMI and payment tracking.",
+      "Partner with design and QA to keep delivery inside tight sprint windows while holding a high bar for TypeScript type safety and code review quality."
+    ],
+    "order": 1
+  },
+  {
+    "id": "exp_futureit",
+    "role": "Full Stack Developer & App Developer",
+    "company": "Future IT Touch",
+    "location": "Chandigarh, Sec 34",
+    "startDate": "2024-02",
+    "endDate": "2025-10",
+    "current": false,
+    "summary": "Full-stack ownership of 4+ production applications — from REST API design and real-time systems to AWS infrastructure and a company-wide UI/UX revamp.",
+    "achievements": [
+      "Engineered 4+ production-grade full-stack applications using React.js, Node.js, Express.js, and MongoDB within 2-week agile sprints, maintaining a 95%+ on-time delivery record.",
+      "Designed RESTful APIs serving 10,000+ monthly requests; applied MongoDB indexing and query optimization, reducing average API response time by 35%.",
+      "Implemented bi-directional real-time communication (live chat + push notifications) using Socket.io and WebSockets, supporting 500+ concurrent users with sub-100ms message latency.",
+      "Built WCAG-compliant, responsive UI components in React.js and Tailwind CSS from Figma designs, cutting designer-developer revision cycles by 50% through component-first architecture.",
+      "Conducted structured code reviews for a 3-member team, enforcing ESLint/Prettier standards and TypeScript type safety — reducing post-release bug reports by 30%.",
+      "Delivered 2 cross-platform React Native mobile apps (iOS + Android) with Twilio OTP-based 2FA and real-time messaging; maintained 99.5% uptime post-launch.",
+      "Built and shipped 3 production web applications using Next.js (SSR/SSG), Laravel (PHP), MySQL, and MongoDB — from requirements to live deployment within 6–8 week sprint cycles.",
+      "Deployed and managed production infrastructure on AWS EC2; configured AWS S3 for scalable file storage, reducing hosting costs by 25% vs the previous vendor setup.",
+      "Led a full UI/UX revamp of the company website (Next.js + Tailwind CSS), delivering 40% traffic growth, 60% increase in page views, and 90% improvement in average session duration within 3 months.",
+      "Mentored 2 junior developers through pair programming, code reviews, and weekly knowledge sessions — reducing onboarding time from 6 weeks to 3 weeks."
+    ],
+    "order": 2
+  }
+]
