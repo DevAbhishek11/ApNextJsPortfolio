@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import AdminSidebar from "@/components/admin/admin-sidebar";
-import AdminTopbar from "@/components/admin/admin-topbar";
+import AdminChrome from "@/components/admin/admin-chrome";
 import { ToastProvider } from "@/components/ui/toast";
 import { getSessionUser } from "@/lib/auth/guard";
 import { messagesRepo } from "@/lib/db/repos";
@@ -22,13 +21,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <ToastProvider>
-      <div className="admin-shell flex min-h-svh bg-adm-bg text-adm-text">
-        <AdminSidebar unreadMessages={unreadMessages} name={user.name} />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <AdminTopbar userName={user.name} unreadMessages={unreadMessages} />
-          <main className="min-w-0 flex-1 p-5 sm:p-7">{children}</main>
-        </div>
-      </div>
+      <AdminChrome userName={user.name} unreadMessages={unreadMessages}>
+        {children}
+      </AdminChrome>
     </ToastProvider>
   );
 }

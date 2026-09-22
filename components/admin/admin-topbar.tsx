@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Bell, ChevronRight, LogOut, Search, User2 } from "lucide-react";
+import { Bell, ChevronRight, LogOut, Menu, Search, User2 } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +26,15 @@ function resolveTitle(pathname: string): string {
   return "Admin";
 }
 
-export default function AdminTopbar({ userName, unreadMessages }: { userName: string; unreadMessages: number }) {
+export default function AdminTopbar({
+  userName,
+  unreadMessages,
+  onMenuOpen,
+}: {
+  userName: string;
+  unreadMessages: number;
+  onMenuOpen: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -71,7 +79,14 @@ export default function AdminTopbar({ userName, unreadMessages }: { userName: st
     .toUpperCase();
 
   return (
-    <header className="admin-shell sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-adm-border bg-adm-bg/80 px-5 backdrop-blur-xl">
+    <header className="admin-shell z-30 flex h-16 shrink-0 items-center gap-3 border-b border-adm-border bg-adm-bg/80 px-4 backdrop-blur-xl sm:px-5">
+      <button
+        onClick={onMenuOpen}
+        aria-label="Open navigation menu"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-adm-border text-adm-muted transition-colors hover:border-adm-border-strong hover:text-adm-text lg:hidden"
+      >
+        <Menu size={17} />
+      </button>
       <div className="min-w-0 flex-1">
         <h1 className="truncate text-[0.95rem] font-semibold text-adm-text">
           {resolveTitle(pathname)}

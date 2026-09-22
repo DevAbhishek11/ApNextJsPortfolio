@@ -69,7 +69,8 @@ export default function Navbar({ name }: { name: string }) {
     };
   }, [open]);
 
-  // Sliding active pill: measure the active item and glide the highlight.
+  // Sliding active pill: measure rect-relative so offsets are correct even
+  // with positioned list items, and re-measure after fonts swap in.
   const index = links.findIndex((l) => isActive(pathname, l.href));
   const layoutPill = () => {
     const el = index >= 0 ? itemRefs.current[index] : null;
@@ -78,12 +79,24 @@ export default function Navbar({ name }: { name: string }) {
       setPill((p) => ({ ...p, show: false }));
       return;
     }
-    setPill({ x: el.offsetLeft, w: el.offsetWidth, show: true });
+    const itemRect = el.getBoundingClientRect();
+    const listRect = list.getBoundingClientRect();
+    setPill({
+      x: itemRect.left - listRect.left,
+      w: itemRect.width,
+      show: itemRect.width > 0,
+    });
   };
   useLayoutEffect(layoutPill, [pathname, index]);
   useEffect(() => {
     window.addEventListener("resize", layoutPill);
-    return () => window.removeEventListener("resize", layoutPill);
+    // Webfonts arriving after first paint shifts link widths — remeasure.
+    document.fonts?.ready.then(layoutPill).catch(() => undefined);
+    const t = setTimeout(layoutPill, 120); // settle after mount/navigation
+    return () => {
+      window.removeEventListener("resize", layoutPill);
+      clearTimeout(t);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname, index]);
 
@@ -136,7 +149,7 @@ export default function Navbar({ name }: { name: string }) {
             {links.map((link, i) => {
               const active = isActive(pathname, link.href);
               return (
-                <li key={link.href} className="relative">
+                <li key={link.href}>
                   <Link
                     href={link.href}
                     ref={(el) => {
