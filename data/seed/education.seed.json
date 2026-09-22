@@ -1,0 +1,20 @@
+[
+  {
+    "id": "edu_bca",
+    "degree": "Bachelor of Computer Applications (BCA)",
+    "institution": "GMN College, Ambala Cantt (Kurukshetra University)",
+    "startYear": "2020",
+    "endYear": "2024",
+    "details": "Relevant coursework: Data Structures, Database Management Systems, Web Technologies, OOP, Computer Networks.",
+    "order": 1
+  },
+  {
+    "id": "edu_hsc",
+    "degree": "Higher Secondary — PCM (Non-Medical)",
+    "institution": "Vishvas Public School, Haryana Board of School Education",
+    "startYear": "2019",
+    "endYear": "2020",
+    "details": "Physics, Chemistry, and Mathematics with Computer Science electives.",
+    "order": 2
+  }
+]

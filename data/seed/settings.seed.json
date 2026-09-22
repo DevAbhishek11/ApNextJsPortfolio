@@ -1,0 +1,34 @@
+{
+  "site": {
+    "name": "Abhishek Prajapati",
+    "titleTemplate": "%s | Abhishek Prajapati — Full Stack Developer",
+    "defaultDescription": "Full Stack Developer with 2.5+ years of production experience building scalable web and mobile applications with the MERN stack, Next.js, and React Native.",
+    "defaultOgImage": "/seed/og-default.jpg",
+    "analyticsId": "",
+    "searchConsoleId": ""
+  },
+  "profile": {
+    "name": "Abhishek Prajapati",
+    "role": "Full Stack Developer",
+    "tagline": "MERN Stack · Next.js · React Native",
+    "roles": ["Full Stack Developer", "MERN Stack Developer", "React Native Developer"],
+    "bio": "I'm a full stack developer with 2.5+ years of production experience shipping scalable web and mobile applications. My day-to-day toolkit revolves around the MERN stack, Next.js, and React Native — but what I care about most is building products that hold up under real users: real-time systems that stay snappy with 500+ concurrent connections, APIs that answer 10,000+ requests a month without breaking a sweat, and interfaces that feel effortless.\n\nAt Future IT Touch in Chandigarh I wore a lot of hats — architecting backends with Node.js, Express, and Laravel, designing MongoDB schemas with indexing strategies that cut response times by 35%, and deploying everything to AWS EC2 with S3-backed storage. One of my favorite achievements there was leading a complete UI/UX revamp of the company website: within three months it drove 40% traffic growth, a 60% rise in page views, and a 90% improvement in average session duration. That experience taught me that performance and polish aren't luxuries — they're growth levers.\n\nThese days at Gigsoft Pro I focus on production-grade merchant and invoicing platforms, cross-platform mobile apps, and mentoring junior developers. I write about what I learn on my blog, and I'm always open to interesting problems — whether that's a real-time feature that needs to scale, a payment flow that needs to be bulletproof, or an app that needs to ship on iOS and Android from one codebase.",
+    "avatar": "/seed/avatar.jpg",
+    "email": "dev.abhishek.ap11@gmail.com",
+    "phone": "+91 705-629-8363",
+    "location": "Shahabad Markanda, Haryana, India",
+    "availability": "Open to freelance & full-time opportunities",
+    "resumeUrl": "/resume.pdf",
+    "socials": {
+      "github": "https://github.com/DevAbhishek11",
+      "linkedin": "https://www.linkedin.com/in/ap-abhishek",
+      "twitter": "",
+      "email": "mailto:dev.abhishek.ap11@gmail.com"
+    },
+    "languages": ["English (Professional)", "Hindi (Native)"],
+    "interests": ["Open-source & personal side projects", "UI/UX design exploration & Figma prototyping", "Tech blogging & emerging web tech", "AI/ML integration in web apps"]
+  },
+  "theme": {
+    "adminDefault": "dark"
+  }
+}

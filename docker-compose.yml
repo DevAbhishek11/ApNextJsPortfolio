@@ -1,0 +1,28 @@
+# One-command deployment for the portfolio + CMS.
+# The app needs a persistent filesystem — the two volumes below are REQUIRED.
+# Without them, all CMS content, media and builds disappear on every redeploy.
+
+services:
+  portfolio:
+    build: .
+    image: ap-next-portfolio:latest
+    container_name: ap-portfolio
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    environment:
+      # REQUIRED — generate with: openssl rand -base64 32
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in a .env file (see .env.example)}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      # Optional contact-form email notifications (submissions are saved regardless):
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_TO: ${SMTP_TO:-}
+    volumes:
+      # Persistent JSON data store (projects, blog, settings, messages, …)
+      - ./data:/app/data
+      # Persistent uploaded media + app builds (100–150MB chunked uploads)
+      - ./public/uploads:/app/public/uploads

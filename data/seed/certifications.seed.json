@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cert_aws",
+    "title": "AWS Certified Developer – Associate",
+    "issuer": "Amazon Web Services",
+    "year": "2025",
+    "description": "Validated proficiency in developing, deploying, and debugging cloud-based applications using AWS services.",
+    "order": 1
+  },
+  {
+    "id": "cert_mongodb",
+    "title": "MongoDB Associate Developer Certificate",
+    "issuer": "MongoDB University",
+    "year": "2025",
+    "description": "Demonstrated expertise in MongoDB data modeling, aggregation pipelines, and performance optimization.",
+    "order": 2
+  },
+  {
+    "id": "cert_meta",
+    "title": "Meta Front-End Developer Professional Certificate",
+    "issuer": "Meta / Coursera",
+    "year": "2024",
+    "description": "Comprehensive front-end program covering React, UI/UX principles, testing, and modern development workflows.",
+    "order": 3
+  },
+  {
+    "id": "cert_node",
+    "title": "The Complete Node.js Developer Course",
+    "issuer": "Udemy (Andrew Mead)",
+    "year": "2024",
+    "description": "Deep dive into Node.js, Express, MongoDB, and building production-grade backend applications.",
+    "order": 4
+  }
+]

@@ -1,0 +1,20 @@
+[
+  {
+    "id": "msg_seed_1",
+    "name": "Rohan Mehta",
+    "email": "rohan.mehta@inbox.dev",
+    "subject": "Freelance project — booking platform",
+    "message": "Hi Abhishek, came across your NextGenTrip case study. We're building a niche booking platform and could use a senior full-stack developer for a 3-month engagement. Are you open to freelance work right now?",
+    "read": true,
+    "createdAt": "2026-09-10T08:24:00.000Z"
+  },
+  {
+    "id": "msg_seed_2",
+    "name": "Priya Sharma",
+    "email": "priya@startupspark.io",
+    "subject": "Full-time role — Senior Full Stack Engineer",
+    "message": "Hello! Your Socket.io real-time systems write-up was exactly the kind of depth our team needs. We have a Senior Full Stack Engineer opening (remote, India-friendly hours). Would love to set up a call this week.",
+    "read": false,
+    "createdAt": "2026-09-19T14:02:00.000Z"
+  }
+]

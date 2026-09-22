@@ -1,0 +1,28 @@
+# Build context hygiene
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Runtime state — lives in mounted volumes, never in the image.
+# EXCEPTION: data/seed ships the committed content examples; the Dockerfile
+# copies it to /app/seed-defaults for first-boot self-seeding.
+data/*
+!data/seed
+data/seed/**
+public/uploads*
+
+# Local env & secrets
+.env
+.env.*
+!.env.example
+
+# Misc
+*.log
+.DS_Store
+coverage
+.vscode
+.idea
