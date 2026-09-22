@@ -13,6 +13,11 @@ import { getBlogPostBySlug, getBlogPosts, getSettings } from "@/lib/db/cached";
 import { buildMetadata, articleJsonLd, breadcrumbJsonLd, jsonLdScript } from "@/lib/seo";
 import { extractToc, formatDate, readingTime, stripHtml } from "@/lib/utils";
 
+// Detail pages render on demand so CMS-driven deletes/yet-unseen slugs
+// return a *real* 404 status (ISR + notFound() can serve a 200 soft-404).
+export const dynamic = "force-dynamic";
+
+
 export async function generateMetadata({
   params,
 }: {

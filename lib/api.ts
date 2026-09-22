@@ -44,6 +44,10 @@ export function payloadTooLarge(message = "The uploaded payload is too large.") 
   return fail(413, "PAYLOAD_TOO_LARGE", message);
 }
 
+export function conflict(message = "The request conflicts with the current state.", fields?: Record<string, string>) {
+  return fail(409, "CONFLICT", message, fields);
+}
+
 export function tooManyRequests(message = "Too many requests — please slow down and retry.") {
   return fail(429, "RATE_LIMITED", message);
 }

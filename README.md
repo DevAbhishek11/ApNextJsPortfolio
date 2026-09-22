@@ -11,6 +11,11 @@ React Hook Form + Zod · Tiptap rich text · bcrypt + jose JWT sessions · local
 ## Features
 
 ### Public site
+- **Dark & light themes** — toggle in the navbar, applied before first paint (no flash),
+  independent from the admin theme
+- **Global search** — `⌘K` / `Ctrl+K` / `/` or the navbar button; glass command-palette with
+  keyboard navigation & recents
+- Glassmorphism navigation island with a sliding active-link indicator and scroll progress bar
 - Home (animated hero with rotating roles, marquee, stats, featured projects, experience
   timeline, skills matrix, testimonials, blog highlights, CTA)
 - About (story, experience, education, certifications, interests, résumé download)
@@ -94,8 +99,28 @@ Any container host with persistent volumes works: your own VPS, Railway, Render,
 3. **Reverse proxy** in front (nginx/Caddy): allow `client_max_body_size` ≥ 12MB for chunk
    uploads and serve HTTPS so the `Secure` session cookie is honored.
 4. **Seed assets**: images in `public/seed/` are committed placeholders / brand artwork.
-   `node scripts/make-placeholders.mjs` regenerates the procedural ones (needs `sharp`).
+   `npm run placeholders` regenerates the procedural ones (needs `sharp`).
    Replace any of them freely — keep the file paths stable because seed JSON references them.
+5. **Runtime uploads are served by `app/uploads/[...path]`**, not by the Next static handler —
+   standalone builds index `public/` once at build time and would 404 anything created later.
+   The route streams files from disk with path-traversal protection, correct content types,
+   immutable caching, and attachment headers for `.apk/.ipa/.zip`. Nothing to configure.
+6. **Soft-404s**: public detail pages rely on Next's streamed rendering, so a missing
+   project/post renders the custom 404 with HTTP 200 *and* `meta robots noindex` (the
+   documented mitigation) — crawlers will not index it.
+
+## Testing
+
+```bash
+npm run test:e2e    # 94 checks against a running instance (BASE_URL override supported)
+npm run typecheck
+npm run build       # full production build + type check
+```
+
+The e2e harness covers every public page, SEO surfaces, auth flows (login/logout,
+invalid-session after password change, lockout recovery), rate limiting, contact +
+honeypot, and authenticated CRUD round trips for projects, blog, media, messages,
+builds and settings — leaving no test data behind.
 
 ## Project layout
 
@@ -123,9 +148,11 @@ public/uploads/        runtime uploads (gitignored)
 |---|---|
 | `npm run dev` | Development server |
 | `npm run build` / `start` | Production build & serve |
+| `npm run test:e2e` | 94-check end-to-end suite against the running server |
 | `npm run typecheck` | TypeScript strict check |
 | `npm run lint` | ESLint |
 | `npm run seed` | Reset/seed the JSON data store |
+| `npm run placeholders` | Regenerate procedural seed images via sharp |
 
 ## API shape
 

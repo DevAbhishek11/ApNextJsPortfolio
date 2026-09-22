@@ -1,4 +1,4 @@
-import { badRequest, handled, ok, unauthorized } from "@/lib/api";
+import { badRequest, conflict, handled, ok, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/guard";
 import { projectsRepo } from "@/lib/db/repos";
 import { refreshProjects } from "@/lib/db/cached";
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const input = await parseBody(request, projectSchema);
 
     const existing = await projectsRepo.bySlug(input.slug);
-    if (existing) return badRequest("A project with this slug already exists.", { slug: "Slug already in use" });
+    if (existing) return conflict("A project with this slug already exists.", { slug: "Slug already in use" });
 
     const project: Project = {
       id: uid("prj"),

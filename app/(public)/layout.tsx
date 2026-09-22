@@ -2,6 +2,7 @@ import GsapProvider from "@/components/animation/gsap-provider";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
 import { ToastProvider } from "@/components/ui/toast";
+import SearchDialog from "@/components/ui/search-dialog";
 import { getSettings } from "@/lib/db/cached";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export default async function PublicLayout({ children }: { children: React.React
           Skip to content
         </a>
         <Navbar name={settings.profile.name} />
+        <SearchDialog />
         <main id="main" className="flex-1">
           {children}
         </main>

@@ -6,7 +6,7 @@ import {
   SESSION_COOKIE, SESSION_MAX_AGE_DEFAULT, SESSION_MAX_AGE_REMEMBER, signSession,
 } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/validation/schemas";
-import { clientIp, rateLimit, sweep } from "@/lib/rate-limit";
+import { clientIp, clearRateLimit, rateLimit, sweep } from "@/lib/rate-limit";
 
 // ---------------------------------------------------------------------------
 // POST /api/auth/login — credential check (bcrypt), rate-limited, issues a
@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
       return unauthorized("Invalid email or password.");
     }
 
+    // Successful login clears the IP bucket so legit users aren't locked out.
+    clearRateLimit(`login:ip:${ip}`);
+    clearRateLimit(`login:em:${input.email.toLowerCase()}`);
+
     const maxAge = input.remember ? SESSION_MAX_AGE_REMEMBER : SESSION_MAX_AGE_DEFAULT;
     const token = await signSession(
       { sub: user.id, email: user.email, name: user.name, tv: user.tokenVersion ?? 1 },
@@ -52,9 +56,12 @@ export async function POST(request: NextRequest) {
     );
 
     const response = ok({ user: { id: user.id, email: user.email, name: user.name } });
+    // Mark the cookie Secure only when the request actually arrived over HTTPS —
+    // this keeps local http testing working while staying strict in production.
+    const proto = request.headers.get("x-forwarded-proto") ?? request.nextUrl.protocol.replace(":", "");
     response.cookies.set(SESSION_COOKIE, token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: proto === "https",
       sameSite: "lax",
       path: "/",
       maxAge,

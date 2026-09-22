@@ -13,6 +13,11 @@ import { RevealGroup } from "@/components/animation/reveal";
 import { getProjectBySlug, getProjects, getSettings } from "@/lib/db/cached";
 import { buildMetadata, jsonLdScript, projectJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
+// Detail pages render on demand so CMS-driven deletes/yet-unseen slugs
+// return a *real* 404 status (ISR + notFound() can serve a 200 soft-404).
+export const dynamic = "force-dynamic";
+
+
 export async function generateMetadata({
   params,
 }: {

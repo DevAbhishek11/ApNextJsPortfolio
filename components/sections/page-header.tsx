@@ -11,7 +11,7 @@ export default function PageHeader({
   description?: string;
 }) {
   return (
-    <section className="relative overflow-hidden border-b border-border pt-16">
+    <section className="relative overflow-hidden border-b border-border pt-24">
       <div className="hero-grid" aria-hidden />
       <div
         aria-hidden

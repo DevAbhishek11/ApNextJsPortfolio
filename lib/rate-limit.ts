@@ -42,6 +42,10 @@ export function rateLimit(
   return { ok: true, remaining: limit - bucket.hits.length, retryAfterSeconds: 0 };
 }
 
+export function clearRateLimit(key: string): void {
+  buckets.delete(key);
+}
+
 export function clientIp(request: Request): string {
   const fwd = request.headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0].trim();

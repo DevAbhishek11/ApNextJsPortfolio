@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { ArrowLeft, Compass } from "lucide-react";
 
-export const metadata = { title: "Page not found" };
+// noindex: streamed 404 content can ship with HTTP 200 (Next soft-404 behavior),
+// so crawlers must be told directly not to index it.
+export const metadata = {
+  title: "Page not found",
+  robots: { index: false, follow: false },
+};
 
 export default function NotFound() {
   return (

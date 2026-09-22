@@ -39,6 +39,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
+# Seed content examples — the runtime volume shadows /app/data, so these live
+# OUTSIDE the volume path; the data layer copies them in on first boot
+# (lib/db/store.ts → SEED_FALLBACK_DIR).
+COPY --from=builder --chown=nextjs:nodejs /app/data/seed /app/seed-defaults
+
 # Writable runtime state: JSON data store + uploaded media + chunked build
 # uploads. Seed content is auto-created from lib/db/defaults on first boot.
 RUN mkdir -p /app/data /app/public/uploads && \

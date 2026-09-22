@@ -11,18 +11,25 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * Applies the admin dark/light theme to <html> BEFORE first paint so the
- * dashboard never flashes the wrong theme. No-ops on public routes.
+ * Applies BOTH theme scopes to <html> BEFORE first paint so nothing flashes:
+ *  - admin routes use the independent `ap-admin-theme` preference
+ *  - public routes use `ap-theme` (falling back to the OS preference)
+ * Also mirrors effective dark mode into `color-scheme` for native controls.
  */
 const themeBootScript = `
 (function () {
   try {
-    if (!location.pathname.startsWith("/admin")) return;
-    var stored = localStorage.getItem("ap-admin-theme");
+    var isAdmin = location.pathname.startsWith("/admin");
+    var stored = localStorage.getItem(isAdmin ? "ap-admin-theme" : "ap-theme");
     var theme = stored === "light" || stored === "dark"
       ? stored
       : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-    document.documentElement.setAttribute("data-theme", theme);
+    var root = document.documentElement;
+    root.setAttribute("data-theme", theme);
+    var meta = document.createElement("meta");
+    meta.name = "color-scheme";
+    meta.content = theme === "dark" ? "dark" : "light";
+    document.head.appendChild(meta);
   } catch (e) {}
 })();
 `;

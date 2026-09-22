@@ -7,9 +7,13 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 
-# Runtime state — lives in mounted volumes, never in the image
-data
-public/uploads
+# Runtime state — lives in mounted volumes, never in the image.
+# EXCEPTION: data/seed ships the committed content examples; the Dockerfile
+# copies it to /app/seed-defaults for first-boot self-seeding.
+data/*
+!data/seed
+data/seed/**
+public/uploads*
 
 # Local env & secrets
 .env

@@ -99,6 +99,18 @@ function LoginFormInner() {
       <Button type="submit" loading={isSubmitting} className="w-full" size="lg">
         <LogIn size={15} /> {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
+
+      <details className="group border-t border-adm-border pt-3.5">
+        <summary className="cursor-pointer list-none text-center text-xs font-medium text-adm-faint transition-colors hover:text-adm-muted [&::-webkit-details-marker]:hidden">
+          Can&apos;t sign in?
+        </summary>
+        <ul className="mt-3 space-y-1.5 rounded-control bg-adm-surface-2 p-3.5 text-[0.72rem] leading-relaxed text-adm-muted">
+          <li>• First boot? Default credentials are documented in the repo README footer of <code className="font-mono">.env.example</code> — change them afterwards.</li>
+          <li>• Check <code className="font-mono">JWT_SECRET</code> is set and ≥ 16 chars, then restart the server.</li>
+          <li>• Locked out by rate limiting? Wait for the timer in the error, or restart the Node process.</li>
+          <li>• Full reset: stop the server, delete <code className="font-mono">data/users.json</code>, restart — the admin account re-seeds.</li>
+        </ul>
+      </details>
     </form>
   );
 }

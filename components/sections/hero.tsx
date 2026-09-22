@@ -87,7 +87,7 @@ export default function Hero({
   return (
     <section
       ref={rootRef}
-      className="relative flex min-h-[100svh] items-center overflow-hidden pt-16"
+      className="relative flex min-h-[100svh] items-center overflow-hidden pt-20"
     >
       {/* Background layers (parallax, transform-only) */}
       <ParallaxLayer className="absolute inset-0" speed={10}>

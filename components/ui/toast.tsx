@@ -78,6 +78,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             >
               <X size={14} />
             </button>
+            <span className="toast-progress" aria-hidden />
           </div>
         ))}
       </div>

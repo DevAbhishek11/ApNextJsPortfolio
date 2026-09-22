@@ -15,6 +15,14 @@ import path from "node:path";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const SEED_DIR = path.join(DATA_DIR, "seed");
+/**
+ * Deploy-safe seed fallback. In Docker / standalone servers the runtime
+ * `data/` directory is a mounted volume (empty on first boot) that shadows any
+ * image files under it — so the image ALSO bakes the seed examples at
+ * <app>/seed-defaults (see Dockerfile) and we look there second. Override with
+ * the SEED_DIR env var if you move them.
+ */
+const SEED_FALLBACK_DIR = process.env.SEED_DIR ?? path.join(process.cwd(), "seed-defaults");
 const TMP_DIR = path.join(DATA_DIR, ".tmp-uploads");
 
 const locks = new Map<string, Promise<unknown>>();
@@ -45,7 +53,15 @@ async function ensureSeeded(name: string): Promise<void> {
   const seedName = name.replace(/\.json$/, ".seed.json");
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
-    await fs.copyFile(path.join(SEED_DIR, seedName), target);
+    let source = path.join(SEED_DIR, seedName);
+    try {
+      await fs.access(source);
+    } catch {
+      const fallback = path.join(SEED_FALLBACK_DIR, seedName);
+      await fs.access(fallback);
+      source = fallback;
+    }
+    await fs.copyFile(source, target);
   } catch (err) {
     // If there is no seed, create a sensible empty default.
     const empty = name === "settings.json" ? "{}" : "[]";

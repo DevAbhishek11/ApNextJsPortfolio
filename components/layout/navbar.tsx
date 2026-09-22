@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Search, ArrowUpRight, Menu, X } from "lucide-react";
+import { GithubIcon, LinkedinIcon } from "@/components/ui/brand-icons";
+import ThemeToggle from "@/components/ui/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -20,19 +22,44 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(href + "/");
 }
 
+/** Fires the custom event the global search dialog listens for. */
+export function openSearch() {
+  window.dispatchEvent(new CustomEvent("ap:open-search"));
+}
+
 export default function Navbar({ name }: { name: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
 
+  const listRef = useRef<HTMLUListElement>(null);
+  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [pill, setPill] = useState({ x: 0, w: 0, show: false });
+
+  // Scroll state + page progress (drives the gradient bar).
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 20);
+        const doc = document.documentElement;
+        const max = doc.scrollHeight - window.innerHeight;
+        setProgress(max > 0 ? Math.min(1, window.scrollY / max) : 0);
+      });
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
-  // Close mobile menu on navigation
   useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
@@ -42,6 +69,24 @@ export default function Navbar({ name }: { name: string }) {
     };
   }, [open]);
 
+  // Sliding active pill: measure the active item and glide the highlight.
+  const index = links.findIndex((l) => isActive(pathname, l.href));
+  const layoutPill = () => {
+    const el = index >= 0 ? itemRefs.current[index] : null;
+    const list = listRef.current;
+    if (!el || !list) {
+      setPill((p) => ({ ...p, show: false }));
+      return;
+    }
+    setPill({ x: el.offsetLeft, w: el.offsetWidth, show: true });
+  };
+  useLayoutEffect(layoutPill, [pathname, index]);
+  useEffect(() => {
+    window.addEventListener("resize", layoutPill);
+    return () => window.removeEventListener("resize", layoutPill);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, index]);
+
   const initials = name
     .split(" ")
     .map((p) => p[0])
@@ -50,79 +95,109 @@ export default function Navbar({ name }: { name: string }) {
     .toUpperCase();
 
   return (
-    <header
-      className={cn(
-        "fixed inset-x-0 top-0 z-[70] transition-all duration-300",
-        scrolled
-          ? "border-b border-border/70 bg-bg/80 shadow-[0_1px_2px_rgba(16,16,20,0.04)] backdrop-blur-xl"
-          : "border-b border-transparent bg-transparent",
-      )}
-    >
-      <nav
-        className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-5 sm:px-8"
-        aria-label="Primary"
-      >
-        <Link href="/" className="group flex items-center gap-2.5" aria-label="Home">
-          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-[0.82rem] font-bold text-accent-ink shadow-sm transition-transform duration-200 group-hover:-rotate-6">
-            {initials}
-          </span>
-          <span className="text-[0.95rem] font-semibold tracking-tight">{name}</span>
-        </Link>
+    <>
+      {/* Reading progress bar */}
+      <span
+        className="scroll-progress"
+        style={{ transform: `scaleX(${progress})` }}
+        aria-hidden
+      />
 
-        <ul className="hidden items-center gap-1 md:flex">
-          {links.map((link) => {
-            const active = isActive(pathname, link.href);
-            return (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cn(
-                    "relative rounded-lg px-3.5 py-2 text-sm font-medium transition-colors duration-150",
-                    active ? "text-ink" : "text-muted hover:text-ink",
-                  )}
-                >
-                  {link.label}
-                  <span
-                    className={cn(
-                      "absolute inset-x-3.5 -bottom-px h-[2px] origin-left rounded-full bg-accent transition-transform duration-200",
-                      active ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
-                    )}
-                  />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-
-        <div className="flex items-center gap-2">
-          <Link
-            href="/contact"
-            className="hidden items-center gap-1.5 rounded-control bg-accent px-4 py-2 text-sm font-semibold text-accent-ink shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-hover md:inline-flex"
-          >
-            Let&apos;s talk <ArrowUpRight size={15} />
+      <header className="fixed inset-x-0 top-0 z-[70] px-4 pt-3 sm:px-6">
+        <nav
+          aria-label="Primary"
+          className={cn(
+            "nav-pill mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 rounded-full px-2.5 transition-all duration-300",
+            scrolled && "shadow-md",
+          )}
+        >
+          {/* Brand */}
+          <Link href="/" className="group flex items-center gap-2.5 pl-1.5" aria-label="Home">
+            <span className="ring-gradient rounded-full">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-surface text-[0.78rem] font-bold text-accent transition-transform duration-300 group-hover:-rotate-12">
+                {initials}
+              </span>
+            </span>
+            <span className="hidden text-[0.92rem] font-semibold tracking-tight sm:block">
+              {name}
+            </span>
           </Link>
-          <button
-            className="inline-flex h-10 w-10 items-center justify-center rounded-control text-ink transition-colors hover:bg-surface-2 md:hidden"
-            aria-expanded={open}
-            aria-label={open ? "Close menu" : "Open menu"}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? <X size={20} /> : <Menu size={20} />}
-          </button>
-        </div>
-      </nav>
 
-      {/* Mobile slide-in menu */}
+          {/* Desktop links with sliding active pill */}
+          <ul ref={listRef} className="relative hidden items-center lg:flex">
+            <span
+              aria-hidden
+              className={cn(
+                "nav-active-pill absolute inset-y-1 rounded-full",
+                pill.show ? "opacity-100" : "opacity-0",
+              )}
+              style={{ width: `${pill.w}px`, transform: `translateX(${pill.x}px)` }}
+            />
+            {links.map((link, i) => {
+              const active = isActive(pathname, link.href);
+              return (
+                <li key={link.href} className="relative">
+                  <Link
+                    href={link.href}
+                    ref={(el) => {
+                      itemRefs.current[i] = el;
+                    }}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative z-10 block rounded-full px-3.5 py-1.5 text-[0.83rem] font-medium transition-colors duration-200",
+                      active ? "text-ink" : "text-muted hover:text-ink",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+
+          {/* Right cluster */}
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={openSearch}
+              aria-label="Search (Ctrl+K)"
+              className="group inline-flex h-9 items-center gap-2 rounded-full px-3 text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+            >
+              <Search size={15} />
+              <span className="hidden text-[0.78rem] font-medium md:block">Search</span>
+              <kbd className="kbd hidden md:inline-flex">⌘K</kbd>
+            </button>
+            <ThemeToggle />
+            <Link
+              href="/contact"
+              onMouseEnter={() => router.prefetch("/contact")}
+              className="btn-shine ml-1 hidden h-9 items-center gap-1.5 rounded-full bg-accent px-4 text-[0.83rem] font-semibold text-accent-ink transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-hover hover:shadow-md sm:inline-flex"
+            >
+              Let&apos;s talk <ArrowUpRight size={14} />
+            </Link>
+            <button
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface-2 lg:hidden"
+              aria-expanded={open}
+              aria-label={open ? "Close menu" : "Open menu"}
+              onClick={() => setOpen((o) => !o)}
+            >
+              {open ? <X size={19} /> : <Menu size={19} />}
+            </button>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile full-screen glass menu */}
       <div
         className={cn(
-          "fixed inset-0 top-16 z-[60] md:hidden",
+          "fixed inset-0 z-[65] lg:hidden",
           open ? "pointer-events-auto" : "pointer-events-none",
         )}
       >
         <div
           className={cn(
-            "absolute inset-0 bg-ink/30 backdrop-blur-sm transition-opacity duration-300",
+            "absolute inset-0 transition-opacity duration-300",
+            "bg-bg/70 backdrop-blur-2xl",
             open ? "opacity-100" : "opacity-0",
           )}
           onClick={() => setOpen(false)}
@@ -130,47 +205,83 @@ export default function Navbar({ name }: { name: string }) {
         />
         <div
           className={cn(
-            "absolute right-0 top-0 h-full w-[78%] max-w-xs border-l border-border bg-surface shadow-lg transition-transform duration-300 ease-out",
-            open ? "translate-x-0" : "translate-x-full",
+            "absolute inset-x-4 top-20 origin-top rounded-3xl border p-6 transition-all duration-300",
+            "glass-strong",
+            open ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.97] opacity-0",
           )}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
         >
-          <ul className="flex flex-col gap-1 p-5">
+          <ul className="space-y-1">
             {links.map((link, i) => {
               const active = isActive(pathname, link.href);
               return (
                 <li
                   key={link.href}
-                  style={{ transitionDelay: open ? `${i * 30}ms` : "0ms" }}
+                  style={{ transitionDelay: open ? `${60 + i * 40}ms` : "0ms" }}
                   className={cn(
                     "transition-all duration-300",
-                    open ? "translate-x-0 opacity-100" : "translate-x-4 opacity-0",
+                    open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
                   )}
                 >
                   <Link
                     href={link.href}
                     aria-current={active ? "page" : undefined}
+                    onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center justify-between rounded-control px-4 py-3 text-[0.95rem] font-medium",
-                      active ? "bg-accent-soft text-accent" : "text-muted hover:bg-surface-2 hover:text-ink",
+                      "group flex items-center justify-between rounded-2xl px-4 py-3.5",
+                      active ? "bg-accent-soft text-accent" : "text-ink hover:bg-surface-2",
                     )}
                   >
-                    {link.label}
-                    {active && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+                    <span className="flex items-baseline gap-3">
+                      <span className="font-mono text-[0.68rem] text-faint">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-xl font-semibold tracking-tight">{link.label}</span>
+                    </span>
+                    <ArrowUpRight
+                      size={17}
+                      className={cn(
+                        "transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5",
+                        active ? "opacity-100" : "opacity-30",
+                      )}
+                    />
                   </Link>
                 </li>
               );
             })}
-            <li className="mt-3">
-              <Link
-                href="/contact"
-                className="flex items-center justify-center gap-2 rounded-control bg-accent px-4 py-3 text-[0.95rem] font-semibold text-accent-ink"
-              >
-                Let&apos;s talk <ArrowUpRight size={15} />
-              </Link>
-            </li>
           </ul>
+
+          <div
+            style={{ transitionDelay: open ? `${60 + links.length * 40}ms` : "0ms" }}
+            className={cn(
+              "mt-4 flex items-center justify-between border-t border-border pt-4 transition-all duration-300",
+              open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                requestAnimationFrame(openSearch);
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-xs font-medium text-muted"
+            >
+              <Search size={13} /> Search the site <kbd className="kbd">⌘K</kbd>
+            </button>
+            <div className="flex items-center gap-1">
+              <a href="https://github.com/DevAbhishek11" target="_blank" rel="noreferrer" aria-label="GitHub" className="p-2 text-muted transition-colors hover:text-ink">
+                <GithubIcon size={16} />
+              </a>
+              <a href="https://www.linkedin.com/in/abhishek-prajapati-a9206030a/" target="_blank" rel="noreferrer" aria-label="LinkedIn" className="p-2 text-muted transition-colors hover:text-ink">
+                <LinkedinIcon size={16} />
+              </a>
+              <ThemeToggle />
+            </div>
+          </div>
         </div>
       </div>
-    </header>
+    </>
   );
 }

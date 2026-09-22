@@ -68,14 +68,14 @@ export default function GalleryLightbox({
       {active !== null &&
         createPortal(
           <div
-            className="animate-modal-in fixed inset-0 z-[95] flex items-center justify-center bg-ink/85 p-4 backdrop-blur-sm"
+            className="animate-modal-in fixed inset-0 z-[95] flex items-center justify-center bg-ink/70 p-4 backdrop-blur-xl"
             role="dialog"
             aria-modal="true"
             aria-label={`${title} screenshot ${active + 1} of ${images.length}`}
             onClick={close}
           >
             <button
-              className="absolute right-4 top-4 rounded-full bg-surface/90 p-2.5 text-ink transition-transform hover:scale-105"
+              className="glass absolute right-4 top-4 rounded-full p-2.5 text-ink transition-transform hover:scale-105"
               onClick={close}
               aria-label="Close lightbox"
             >
@@ -84,7 +84,7 @@ export default function GalleryLightbox({
             {images.length > 1 && (
               <>
                 <button
-                  className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-3 text-ink transition-transform hover:scale-105 sm:left-6"
+                  className="glass absolute left-3 top-1/2 -translate-y-1/2 rounded-full p-3 text-ink transition-transform hover:scale-105 sm:left-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     step(-1);
@@ -94,7 +94,7 @@ export default function GalleryLightbox({
                   <ChevronLeft size={20} />
                 </button>
                 <button
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-surface/90 p-3 text-ink transition-transform hover:scale-105 sm:right-6"
+                  className="glass absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-3 text-ink transition-transform hover:scale-105 sm:right-6"
                   onClick={(e) => {
                     e.stopPropagation();
                     step(1);
@@ -112,7 +112,7 @@ export default function GalleryLightbox({
               className={cn("max-h-[86vh] w-auto max-w-[94vw] rounded-card shadow-lg")}
               onClick={(e) => e.stopPropagation()}
             />
-            <p className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-surface/90 px-3.5 py-1.5 text-xs font-medium text-ink">
+            <p className="glass absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full px-3.5 py-1.5 text-xs font-medium text-ink">
               {active + 1} / {images.length}
             </p>
           </div>,
