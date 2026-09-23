@@ -120,7 +120,7 @@ export default function Navbar({ name }: { name: string }) {
         <nav
           aria-label="Primary"
           className={cn(
-            "nav-pill mx-auto flex h-14 w-full max-w-5xl items-center justify-between gap-2 rounded-full px-2.5 transition-all duration-300",
+            "nav-pill mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-2 rounded-full px-2.5 transition-all duration-300",
             scrolled && "shadow-md",
           )}
         >

@@ -8,7 +8,7 @@ export default function CTABanner({ email }: { email: string }) {
     <Section>
       <Container>
         <Reveal variant="scale">
-          <div className="relative overflow-hidden rounded-[1.5rem] border border-border bg-ink px-6 py-16 text-center sm:px-12 sm:py-20">
+          <div className="relative overflow-hidden rounded-[1.5rem] border border-border bg-[#101014] px-6 py-16 text-center sm:px-12 sm:py-20">
             <div
               aria-hidden
               className="absolute inset-0 opacity-60"

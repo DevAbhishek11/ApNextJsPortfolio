@@ -73,7 +73,7 @@ export function Modal({
       aria-label={title}
     >
       <div
-        className="absolute inset-0 bg-ink/45 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-red backdrop-blur-[10px]"
         onClick={onClose}
         aria-hidden
       />

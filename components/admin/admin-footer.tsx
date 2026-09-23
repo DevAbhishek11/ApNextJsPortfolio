@@ -9,7 +9,7 @@ import { GithubIcon } from "@/components/ui/brand-icons";
 export default function AdminFooter({ userName }: { userName: string }) {
   const year = new Date().getFullYear();
   return (
-    <footer className="admin-shell flex h-11 shrink-0 items-center justify-between gap-3 border-t border-adm-border bg-adm-surface px-4 sm:px-6">
+    <footer className="admin-shell flex h-11 shrink-0 items-center justify-between gap-3 bg-adm-surface px-4 sm:px-6">
       <div className="flex min-w-0 items-center gap-2 text-[0.7rem] text-adm-faint">
         <span className="truncate">
           © {year} {userName}
@@ -24,12 +24,12 @@ export default function AdminFooter({ userName }: { userName: string }) {
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="hidden items-center gap-1.5 rounded-full border border-adm-border bg-adm-bg px-2.5 py-1 text-[0.62rem] font-medium tracking-wide text-adm-faint md:inline-flex">
+        {/* <span className="hidden items-center gap-1.5 rounded-full border border-adm-border bg-adm-bg px-2.5 py-1 text-[0.62rem] font-medium tracking-wide text-adm-faint md:inline-flex">
           <Database size={11} aria-hidden /> Local JSON store
         </span>
         <span className="hidden items-center gap-1.5 rounded-full border border-adm-border bg-adm-bg px-2.5 py-1 text-[0.62rem] font-medium tracking-wide text-adm-faint md:inline-flex">
           <Server size={11} aria-hidden /> Node runtime
-        </span>
+        </span> */}
         <a
           href="https://github.com/DevAbhishek11/ApNextJsPortfolio"
           target="_blank"

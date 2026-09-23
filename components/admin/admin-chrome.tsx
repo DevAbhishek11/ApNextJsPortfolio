@@ -36,7 +36,7 @@ export default function AdminChrome({
   }, [mobileOpen]);
 
   return (
-    <div className="admin-shell flex h-svh overflow-hidden bg-adm-bg text-adm-text">
+    <div className="admin-shell flex h-svh overflow-hidden bg-adm-surface text-adm-text">
       <AdminSidebar
         unreadMessages={unreadMessages}
         name={userName}
@@ -49,7 +49,7 @@ export default function AdminChrome({
           unreadMessages={unreadMessages}
           onMenuOpen={() => setOpenPath(pathname)}
         />
-        <main id="admin-main" className="admin-scroll min-w-0 flex-1 overflow-y-auto p-5 sm:p-7">
+        <main id="admin-main" className="admin-scroll min-w-0 flex-1 overflow-y-auto p-4 border border-adm-border rounded-3xl bg-adm-bg">
           {children}
         </main>
         <AdminFooter userName={userName} />

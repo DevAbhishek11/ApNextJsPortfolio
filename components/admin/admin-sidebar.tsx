@@ -51,7 +51,7 @@ function NavContent({
     <>
       <div
         className={cn(
-          "flex h-16 shrink-0 items-center gap-2.5 border-b border-adm-border px-4",
+          "flex h-16 shrink-0 items-center gap-2.5 px-4",
           collapsed && "justify-center px-2",
         )}
       >
@@ -159,7 +159,7 @@ export default function AdminSidebar({
       {/* Desktop column — fixed width part of the shell; only areas inside it scroll */}
       <aside
         className={cn(
-          "hidden h-full shrink-0 flex-col overflow-hidden border-r border-adm-border bg-adm-surface lg:flex",
+          "hidden h-full shrink-0 flex-col overflow-hidden bg-adm-surface lg:flex",
           "transition-[width]",
           collapsed ? "w-[68px]" : "w-[240px]",
         )}
@@ -172,7 +172,7 @@ export default function AdminSidebar({
           collapsed={collapsed}
           pathname={pathname}
         />
-        <div className="shrink-0 border-t border-adm-border p-3">
+        <div className="shrink-0 p-3">
           <Link
             href="/"
             target="_blank"

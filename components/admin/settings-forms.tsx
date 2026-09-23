@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,9 +19,27 @@ import type { ApiResponse, Settings } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
 // Profile + SEO + theme settings (single form, one save)
+//
+// `activeSection` / `hidden` let a parent (see settings-tabs.tsx) render this
+// as one panel of a tab set without splitting the underlying <form>: every
+// field stays mounted and registered even while its section is hidden, so
+// nothing is lost when switching tabs, and Save always submits everything.
+// Omit `activeSection` to render every section at once (original behavior).
 // ---------------------------------------------------------------------------
 
-export function SettingsForm({ initial }: { initial: Settings }) {
+export type SettingsSection = "profile" | "contact" | "seo" | "theme";
+
+export function SettingsForm({
+  initial,
+  activeSection,
+  hidden = false,
+  idBase,
+}: {
+  initial: Settings;
+  activeSection?: SettingsSection;
+  hidden?: boolean;
+  idBase?: string;
+}) {
   const toast = useToast();
   const router = useRouter();
 
@@ -30,6 +48,11 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       resolver: zodResolver(settingsSchema),
       defaultValues: initial,
     });
+
+  const generatedIdBase = useId();
+  const tabIdBase = idBase ?? generatedIdBase;
+  const sectionHidden = (key: SettingsSection) =>
+    activeSection !== undefined && activeSection !== key;
 
   const onSubmit = async (values: SettingsInput) => {
     try {
@@ -51,9 +74,15 @@ export function SettingsForm({ initial }: { initial: Settings }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate hidden={hidden} className="space-y-5">
       {/* Profile */}
-      <section className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card">
+      <section
+        id={`${tabIdBase}-panel-profile`}
+        role="tabpanel"
+        aria-labelledby={`${tabIdBase}-tab-profile`}
+        hidden={sectionHidden("profile")}
+        className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card"
+      >
         <h2 className="mb-1 text-sm font-semibold text-adm-text">Profile</h2>
         <p className="mb-5 text-xs text-adm-faint">
           Feeds the hero, about page, footer, and contact page — edit the whole site without touching code.
@@ -105,7 +134,13 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       </section>
 
       {/* Contact + socials */}
-      <section className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card">
+      <section
+        id={`${tabIdBase}-panel-contact`}
+        role="tabpanel"
+        aria-labelledby={`${tabIdBase}-tab-contact`}
+        hidden={sectionHidden("contact")}
+        className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card"
+      >
         <h2 className="mb-5 text-sm font-semibold text-adm-text">Contact & socials</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Email" htmlFor="st-email">
@@ -141,7 +176,13 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       </section>
 
       {/* SEO */}
-      <section className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card">
+      <section
+        id={`${tabIdBase}-panel-seo`}
+        role="tabpanel"
+        aria-labelledby={`${tabIdBase}-tab-seo`}
+        hidden={sectionHidden("seo")}
+        className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card"
+      >
         <h2 className="mb-5 text-sm font-semibold text-adm-text">SEO defaults</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Site name" required error={errors.site?.name?.message} htmlFor="st-sitename">
@@ -163,7 +204,13 @@ export function SettingsForm({ initial }: { initial: Settings }) {
       </section>
 
       {/* Theme */}
-      <section className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card">
+      <section
+        id={`${tabIdBase}-panel-theme`}
+        role="tabpanel"
+        aria-labelledby={`${tabIdBase}-tab-theme`}
+        hidden={sectionHidden("theme")}
+        className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card"
+      >
         <h2 className="mb-1 text-sm font-semibold text-adm-text">Admin theme default</h2>
         <p className="mb-5 text-xs text-adm-faint">
           Used when no local preference exists yet (your personal toggle lives in the top bar).

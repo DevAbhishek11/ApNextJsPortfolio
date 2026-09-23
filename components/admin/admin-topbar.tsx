@@ -79,7 +79,7 @@ export default function AdminTopbar({
     .toUpperCase();
 
   return (
-    <header className="admin-shell z-30 flex h-16 shrink-0 items-center gap-3 border-b border-adm-border bg-adm-bg/80 px-4 backdrop-blur-xl sm:px-5">
+    <header className="admin-shell z-30 flex h-16 shrink-0 items-center gap-3 bg-adm-surface px-4 backdrop-blur-xl sm:px-5">
       <button
         onClick={onMenuOpen}
         aria-label="Open navigation menu"
