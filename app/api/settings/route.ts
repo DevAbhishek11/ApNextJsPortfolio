@@ -1,7 +1,7 @@
 import { handled, ok, parseBody, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/guard";
 import { settingsRepo } from "@/lib/db/repos";
-import { refreshAllContent, refreshSettings } from "@/lib/db/cached";
+import { refreshAllContent } from "@/lib/db/cached";
 import { settingsSchema } from "@/lib/validation/schemas";
 
 export async function GET() {
@@ -18,7 +18,6 @@ export async function PATCH(request: Request) {
     if (!user) return unauthorized();
     const input = await parseBody(request, settingsSchema);
     const saved = await settingsRepo.save(input);
-    refreshSettings();
     refreshAllContent(); // profile info feeds most public pages
     return ok(saved);
   });

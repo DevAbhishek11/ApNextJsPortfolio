@@ -1,4 +1,4 @@
-import { badRequest, conflict, handled, ok, unauthorized } from "@/lib/api";
+import { conflict, handled, ok, unauthorized } from "@/lib/api";
 import { getSessionUser } from "@/lib/auth/guard";
 import { projectsRepo } from "@/lib/db/repos";
 import { refreshProjects } from "@/lib/db/cached";

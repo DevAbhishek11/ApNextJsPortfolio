@@ -48,7 +48,7 @@ function LoginFormInner() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
+    <form method="post" onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-4">
       {formError && (
         <div
           role="alert"
@@ -105,11 +105,10 @@ function LoginFormInner() {
           Can&apos;t sign in?
         </summary>
         <ul className="mt-3 space-y-1.5 rounded-control bg-adm-surface-2 p-3.5 text-[0.72rem] leading-relaxed text-adm-muted">
-          <li>• First boot? Default credentials are documented in the repo README footer of <code className="font-mono">.env.example</code> — change them afterwards.</li>
-          <li>• Check <code className="font-mono">JWT_SECRET</code> is set and ≥ 16 chars, then restart the server.</li>
-          <li>• Changed the password before and forgot it? Run <code className="font-mono">npm run reset-admin</code> on the server (Docker: <code className="font-mono">docker compose exec portfolio node scripts/reset-admin.mjs</code>).</li>
-          <li>• Locked out by rate limiting? Wait for the timer in the error, or restart the Node process.</li>
-          <li>• Full reset: <code className="font-mono">npm run reset-admin</code> re-creates the account even if <code className="font-mono">data/users.json</code> is missing or corrupt.</li>
+          <li>• First boot? The initial login is documented in the README. Change the password immediately.</li>
+          <li>• On serverless, set <code className="font-mono">DATABASE_URL</code> to a persistent Postgres database. Set <code className="font-mono">JWT_SECRET</code> (≥ 16 chars) everywhere.</li>
+          <li>• Forgot the password? Run <code className="font-mono">node scripts/reset-admin.mjs --password=NewSecret123</code> with the SAME <code className="font-mono">DATABASE_URL</code> (or Docker volume) the live site uses.</li>
+          <li>• Rate limited? Wait for the timer in the response; attempts are limited per IP and account.</li>
         </ul>
       </details>
     </form>

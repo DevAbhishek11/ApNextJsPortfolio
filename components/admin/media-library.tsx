@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import ConfirmDialog from "./confirm-dialog";
 import { cn, formatBytes, formatDate } from "@/lib/utils";
 import type { ApiResponse, BlogPost, MediaItem, Project } from "@/lib/types";
+import { uploadMedia } from "./media-upload";
 
 interface UploadTask {
   id: number;
@@ -18,40 +19,6 @@ interface UploadTask {
 }
 
 let taskId = 0;
-
-function uploadWithProgress(
-  file: File,
-  onProgress: (pct: number) => void,
-): Promise<MediaItem> {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/media");
-    const form = new FormData();
-    form.append("files", file);
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
-    };
-    xhr.onload = () => {
-      try {
-        const json = JSON.parse(xhr.responseText) as ApiResponse<{
-          items: MediaItem[];
-          errors: { name: string; message: string }[];
-        }>;
-        if (xhr.status >= 200 && xhr.status < 300 && json.success) {
-          if (json.data.items.length > 0) resolve(json.data.items[0]);
-          else reject(new Error(json.data.errors[0]?.message ?? "Upload rejected"));
-        } else {
-          reject(new Error(json.success ? "Upload failed" : json.error.message));
-        }
-      } catch {
-        reject(new Error("Unexpected server response."));
-      }
-    };
-    xhr.onerror = () => reject(new Error("Network error during upload."));
-    xhr.send(form);
-  });
-}
 
 export default function MediaLibrary({ initial }: { initial: MediaItem[] }) {
   const toast = useToast();
@@ -106,7 +73,7 @@ export default function MediaLibrary({ initial }: { initial: MediaItem[] }) {
         const id = ++taskId;
         setTasks((t) => [...t, { id, name: file.name, progress: 0 }]);
         try {
-          const item = await uploadWithProgress(file, (pct) =>
+          const item = await uploadMedia(file, (pct) =>
             setTasks((t) => t.map((x) => (x.id === id ? { ...x, progress: pct } : x))),
           );
           setItems((prev) => [item, ...prev]);

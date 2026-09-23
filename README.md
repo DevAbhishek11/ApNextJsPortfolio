@@ -1,10 +1,11 @@
 # Abhishek Prajapati — Portfolio, Blog & Admin CMS
 
-A production-grade personal platform: animated public portfolio, full blog, and a private
-admin CMS that manages everything through flat-file JSON storage — no database server required.
+A personal platform with an animated public portfolio, full blog, and a private admin CMS.
+Local/Docker installs use persistent JSON files; serverless deployments use shared PostgreSQL
+for content, settings, and credentials, and Vercel Blob for uploaded files.
 
 **Stack:** Next.js 16 (App Router, TypeScript strict) · Tailwind CSS v4 · GSAP + ScrollTrigger ·
-React Hook Form + Zod · Tiptap rich text · bcrypt + jose JWT sessions · local filesystem storage.
+React Hook Form + Zod · Tiptap rich text · bcrypt + jose JWT sessions · JSON/PostgreSQL + Blob.
 
 ---
 
@@ -35,8 +36,8 @@ React Hook Form + Zod · Tiptap rich text · bcrypt + jose JWT sessions · local
 - Blog CRUD — full Tiptap editor (headings, code blocks with syntax highlight, inline images
   with alt + captions via `<figure>`, links, word-count / read-time), per-post SEO fields
 - Media library — multi-file drag & drop upload with per-file progress, usage scanning
-- **Builds** — distribute 100–150MB APK / IPA / ZIP files via an 8MB-chunked upload pipeline
-  (retry per chunk, cancel), so large binaries never hit a request-body limit
+- **Builds** — distribute 100–150MB APK / IPA / ZIP files via local 8MB chunks or
+  direct-to-Blob multipart uploads on serverless (retry, progress, cancel)
 - Messages inbox — read/unread, search, reply-by-mail, delete
 - Settings — profile/SEO/theme/content editing without touching code, change password
   (bcrypt cost 12, invalidates existing sessions)
@@ -60,7 +61,8 @@ cp .env.example .env            # set JWT_SECRET (openssl rand -base64 32)
 npm run dev                     # http://localhost:3000
 ```
 
-On first run the data store is seeded from `lib/db/defaults.ts` into `data/` (gitignored).
+On first run the data store is initialized once from `data/seed/*.seed.json` into
+`data/*.json` (gitignored). Subsequent runs do **not** overwrite your edits.
 
 **Default admin login** — `/admin/login`:
 
@@ -72,7 +74,7 @@ On first run the data store is seeded from `lib/db/defaults.ts` into `data/` (gi
 > Change the password immediately from **Admin → Settings → Change password** — this also
 > invalidates all existing sessions.
 
-## Docker deployment (recommended)
+## Docker deployment (persistent filesystem)
 
 ```bash
 cp .env.example .env            # set JWT_SECRET + NEXT_PUBLIC_SITE_URL
@@ -88,64 +90,91 @@ Compose mounts two persistent volumes that are **required**:
 
 Any container host with persistent volumes works: your own VPS, Railway, Render, Fly.io, Hetzner…
 
+## Vercel / serverless deployment (persistent CMS)
+
+**Required services:** a PostgreSQL database (for content, messages, settings and the password)
+and a **public Vercel Blob** store (for media and downloadable builds). A serverless function's
+local disk and `/tmp` do **not** persist between instances or deployments. To set this up:
+
+1. Create a hosted PostgreSQL database (for example Neon or Supabase), use a **pooled**
+   connection string, and add it to the Vercel project's environment variables as
+   `DATABASE_URL` (include the provider's SSL settings, e.g. `?sslmode=require`).
+2. In Vercel **Storage**, create a *public* Blob store, connect it to this project, and confirm
+   that Vercel has set `BLOB_READ_WRITE_TOKEN` for this deployment.
+3. Set `JWT_SECRET` to a stable random string of at least 16 characters
+   (`openssl rand -base64 32`) and `NEXT_PUBLIC_SITE_URL` to the deployed HTTPS URL.
+   Set all variables for the environments you actually deploy (Production / Preview).
+   **Do not commit these values**, and keep `JWT_SECRET` the same across redeploys.
+4. Redeploy. The app creates `portfolio_collections` automatically. Each collection is seeded
+   *only once* from `data/seed/*.seed.json`; changes are committed to PostgreSQL and are read
+   by every instance immediately (including public pages and the dynamic sitemap).
+   Uploaded files live in Blob and remain available after redeploys. Large media uploads
+   (>4MB) and builds (up to 150MB) upload directly from the dashboard to Blob, bypassing
+   Vercel's request-body limit. No Git commit or redeploy is needed for CMS edits.
+5. Sign in using the initial credentials below and **change the password immediately** at
+   **Admin → Settings → Change password**. The new bcrypt hash and session version live in
+   PostgreSQL; all old sessions, including sessions on other devices, are rejected.
+
+If `DATABASE_URL` is absent, the public site can still show committed seed content, but admin
+login/writes fail explicitly with `STORAGE_NOT_CONFIGURED` (HTTP 503) rather than pretending to
+save to `/tmp`. If Blob is missing, uploads fail with a configuration error. The code cannot
+provision either external service on your behalf; configure them before using the dashboard.
+
+**Migrating existing local/Docker edits** (if any): with `DATABASE_URL` pointing at the new
+DB, run `npm run import:db` from the machine holding `data/*.json`, *before* the first
+serverless request seeds empty DB rows. If the DB has already been seeded, back it up and
+explicitly run `npm run import:db -- --replace` to overwrite its rows. This includes the
+admin's local password and bumps its token version. Only real JSON files can be imported;
+edits previously written to ephemeral serverless `/tmp` may already be lost after cold start
+and cannot be recovered by redeploying. The committed seed remains the fallback starting point.
+
 ## 🔐 Locked out of the admin?
 
-The admin password is **not** in the repo — it lives in `data/users.json` (or the
-Docker volume). If you changed it and forgot it, reset from the server:
+Use the same persistent backend as the deployed app (password recovery invalidates all sessions):
 
 ```bash
-# local / VPS
-npm run reset-admin                              # back to the documented default
+# JSON file / Docker volume
 node scripts/reset-admin.mjs --password=NewSecret123
-
-# Docker
 docker compose exec portfolio node scripts/reset-admin.mjs --password=NewSecret123
+
+# PostgreSQL (run locally with the live DATABASE_URL, or from a server with it set)
+DATABASE_URL='postgresql://...' node scripts/reset-admin.mjs --password=NewSecret123
+# If your local env file contains DATABASE_URL:
+node --env-file=.env.local scripts/reset-admin.mjs --password=NewSecret123
 ```
 
-This bumps the session token version, so every existing session is invalidated,
-and it also recreates the admin account if `users.json` is missing or corrupt.
-The login page's *"Can't sign in?"* panel lists the other common causes.
+`--seed` edits a committed example file, **not** the live database. Do not commit your new
+password hash to Git to change a deployed password. Protect the database URL and keep backups.
 
-## ⚠️ Deployment caveats — read this
+## Deployment notes
 
-1. **Not a serverless app.** Do **not** deploy to Vercel/Netlify serverless: storage is the
-   local filesystem (`/data`, `/public/uploads`) and app-build uploads (up to 150MB via 8MB
-   chunks) need a long-running Node process with **persistent disk and no per-request body
-   limit**. One process, one filesystem.
-   **If you deploy to Vercel anyway:** set `JWT_SECRET` (≥ 16 chars) in *Project → Settings →
-   Environment Variables* and redeploy. The app detects Vercel and runs read-only from the
-   committed seed (`data/seed/*.seed.json`), with scratch writes going to ephemeral `/tmp`.
-   Admin login works with the seeded credentials. CMS edits and uploads are **not durable**
-   (they reset on cold start), and in-app password changes are disabled. To change the admin
-   password, run `node scripts/reset-admin.mjs --seed --password=NewSecret123` locally, then commit
-   `data/seed/users.seed.json` and redeploy.
-2. **Single-instance by design.** The JSON data layer uses atomic writes; running multiple
-   replicas behind a load balancer is unsafe without an external shared volume mount.
-3. **Reverse proxy** in front (nginx/Caddy): allow `client_max_body_size` ≥ 12MB for chunk
-   uploads and serve HTTPS so the `Secure` session cookie is honored.
-4. **Seed assets**: images in `public/seed/` are committed placeholders / brand artwork.
-   `npm run placeholders` regenerates the procedural ones (needs `sharp`).
-   Replace any of them freely — keep the file paths stable because seed JSON references them.
-5. **Runtime uploads are served by `app/uploads/[...path]`**, not by the Next static handler —
-   standalone builds index `public/` once at build time and would 404 anything created later.
-   The route streams files from disk with path-traversal protection, correct content types,
-   immutable caching, and attachment headers for `.apk/.ipa/.zip`. Nothing to configure.
-6. **Soft-404s**: public detail pages rely on Next's streamed rendering, so a missing
-   project/post renders the custom 404 with HTTP 200 *and* `meta robots noindex` (the
-   documented mitigation) — crawlers will not index it.
+1. **Docker/local:** mount `./data` and `./public/uploads` on persistent storage. Without
+   volumes, CMS content and uploads vanish on container replacement. A local JSON volume is
+   for a **single Node process**; for multiple replicas, use `DATABASE_URL` and shared Blob.
+2. **Reverse proxy (local JSON uploads):** allow at least 12MB per request and use HTTPS so
+   session cookies can be `Secure`. On Vercel, large uploads bypass the function body limit.
+3. **Seed artwork:** `public/seed/` contains committed images; `npm run placeholders`
+   regenerates procedural ones. Do not move seed paths without updating the seed JSON.
+4. **Local runtime uploads** are streamed from `app/uploads/[...path]`, rather than Next's
+   static public handler. On serverless, the CMS stores and links directly to Blob URLs.
+5. **Soft-404s:** public detail pages are streamed, so a missing project/post may render
+   HTTP 200 with the custom 404 content and `meta robots noindex`.
 
 ## Testing
 
 ```bash
-npm run test:e2e    # 94 checks against a running instance (BASE_URL override supported)
+npm run test:e2e    # 102 checks against a running instance (BASE_URL override supported)
+npm run test:store  # real Postgres WASM contract + serverless fail-closed checks
 npm run typecheck
-npm run build       # full production build + type check
+npm run build       # production build + type check (VERCEL=1 npm run build also works)
 ```
 
 The e2e harness covers every public page, SEO surfaces, auth flows (login/logout,
-invalid-session after password change, lockout recovery), rate limiting, contact +
-honeypot, and authenticated CRUD round trips for projects, blog, media, messages,
-builds and settings — leaving no test data behind.
+invalid sessions on other devices after password change, lockout recovery), rate limiting,
+contact + honeypot, and authenticated CRUD round trips for projects, blog, media,
+messages, builds and settings — leaving no test fixtures behind. `test:store`
+verifies concurrent mutations and survival across simulated serverless instances.
+Direct Vercel Blob uploads require a real Blob store for live integration testing.
 
 ## Project layout
 
@@ -154,17 +183,19 @@ app/
   (public)/            home, about, services, projects, blog, contact + [slug] pages
   admin/(dashboard)/   protected CMS: overview, projects, blog, media, builds, messages, settings
   admin/login/         sign-in page
-  api/                 versioned REST-y route handlers (all JSON envelopes)
-  proxy.ts             /admin + private /api guard
+  api/                 JSON-envelope REST routes + Blob upload callbacks
+  uploads/             local/Docker media and build streaming
+proxy.ts               fast /admin JWT signature guard
 lib/
-  db/                  JSON store (atomic writes) + repos + defaults/seed
+  db/                  JSON/Postgres stores, static seeds, typed repos
   auth/                bcrypt password utils, jose sessions, route guard
   validation/          Zod schemas shared by client + server
   rate-limit.ts        in-memory sliding-window limiter
 components/
   ui/, sections/, admin/, motion/
-data/                  runtime JSON state (gitignored, seeded on boot)
-public/uploads/        runtime uploads (gitignored)
+data/seed/*.seed.json  committed first-boot examples (one per collection)
+data/*.json            local/Docker runtime state (gitignored)
+public/uploads/        local/Docker runtime uploads (gitignored)
 ```
 
 ## Scripts
@@ -173,10 +204,13 @@ public/uploads/        runtime uploads (gitignored)
 |---|---|
 | `npm run dev` | Development server |
 | `npm run build` / `start` | Production build & serve |
-| `npm run test:e2e` | 94-check end-to-end suite against the running server |
+| `npm run test:e2e` | 102-check end-to-end suite against the running server |
+| `npm run test:store` | PostgreSQL + missing-config unit tests |
 | `npm run typecheck` | TypeScript strict check |
 | `npm run lint` | ESLint |
-| `npm run seed` | Reset/seed the JSON data store |
+| `npm run seed` | Seed missing local JSON files |
+| `npm run import:db` | Import existing local JSON into Postgres (skip existing by default) |
+| `npm run reset-admin` | Recover the admin password in the active backend |
 | `npm run placeholders` | Regenerate procedural seed images via sharp |
 
 ## API shape
@@ -190,6 +224,6 @@ Every response follows `ApiResponse<T>`:
 { "success": false, "error": { "code": "VALIDATION_ERROR", "message": "…" } }
 ```
 
-Public reads: `GET /api/projects`, `GET /api/blog`, `GET /api/media`.
-Everything else (`POST/PATCH/DELETE` on projects/blog/media/builds/settings/messages,
-chunk upload routes) requires the admin session cookie.
+Public reads: `GET /api/projects`, `GET /api/blog`. Media, builds, settings,
+messages and all mutations require the admin session cookie. Blob's upload-token
+callback routes return the SDK's response format instead of this envelope.

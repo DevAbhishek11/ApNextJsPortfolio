@@ -2,6 +2,8 @@ import { badRequest, handled, ok, payloadTooLarge, parseBody, unauthorized } fro
 import { getSessionUser } from "@/lib/auth/guard";
 import { hasAllowedBuildExtension, safeFilename } from "@/lib/upload";
 import { createUploadSession } from "@/lib/build-uploads";
+import { createBlobBuildUpload } from "@/lib/blob-builds";
+import { directBuildUploads } from "@/lib/blob-storage";
 import { buildInitSchema, MAX_BUILD_BYTES } from "@/lib/validation/schemas";
 import { uid } from "@/lib/utils";
 
@@ -20,6 +22,10 @@ export async function POST(request: Request) {
     }
     if (input.size > MAX_BUILD_BYTES) {
       return payloadTooLarge("Build files are limited to 150MB.");
+    }
+
+    if (directBuildUploads()) {
+      return ok(await createBlobBuildUpload(input, user.id), { status: 201 });
     }
 
     const session = await createUploadSession({

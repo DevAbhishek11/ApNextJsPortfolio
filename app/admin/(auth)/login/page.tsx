@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { ShieldCheck } from "lucide-react";
 import LoginForm from "@/components/admin/login-form";
 
+// Saved admin theme defaults and site metadata must reflect CMS changes.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Admin Sign In",
   robots: { index: false, follow: false },

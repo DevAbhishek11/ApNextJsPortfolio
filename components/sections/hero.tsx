@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { ArrowRight, ChevronDown, Download, MapPin } from "lucide-react";
 import { ParallaxLayer } from "@/components/animation/parallax";
@@ -12,16 +12,24 @@ import { cn } from "@/lib/utils";
 // parallax, dual CTAs, availability badge, scroll indicator.
 // ---------------------------------------------------------------------------
 
+function subscribeReducedMotion(listener: () => void) {
+  const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+  media.addEventListener("change", listener);
+  return () => media.removeEventListener("change", listener);
+}
+const reducedMotionSnapshot = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const reducedMotionServer = () => false;
+
 function TypedRoles({ roles }: { roles: string[] }) {
   const [index, setIndex] = useState(0);
   const [text, setText] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const reducedMotion = useSyncExternalStore(
+    subscribeReducedMotion, reducedMotionSnapshot, reducedMotionServer,
+  );
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setText(roles[0] ?? "");
-      return;
-    }
+    if (reducedMotion) return;
     const full = roles[index % roles.length] ?? "";
     const speed = deleting ? 32 : 62;
     const timer = setTimeout(() => {
@@ -39,11 +47,11 @@ function TypedRoles({ roles }: { roles: string[] }) {
       }
     }, speed);
     return () => clearTimeout(timer);
-  }, [text, deleting, index, roles]);
+  }, [text, deleting, index, roles, reducedMotion]);
 
   return (
     <span className="text-accent">
-      {text}
+      {reducedMotion ? roles[0] : text}
       <span aria-hidden className="animate-blink ml-0.5 inline-block h-[0.9em] w-[2px] translate-y-[0.12em] bg-accent" />
     </span>
   );

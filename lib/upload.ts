@@ -1,6 +1,8 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { ensureDir, paths } from "@/lib/db/store";
+import { put } from "@vercel/blob";
+import { assertUploadStorage } from "@/lib/blob-storage";
 import { ALLOWED_IMAGE_TYPES, allowedBuildExtensions } from "@/lib/validation/schemas";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +38,13 @@ export function isAllowedImage(mime: string | null): mime is string {
   return !!mime && mime in ALLOWED_IMAGE_TYPES;
 }
 
+export function isSafeSvg(buffer: Buffer): boolean {
+  const text = buffer.toString("utf8");
+  // SVG can execute script via event handlers, links, foreignObject, CSS and
+  // XML entities. Accept only simple, self-contained artwork.
+  return !/<(?:script|foreignobject|iframe|object|embed|style|image|use|animate|set)\b|\bon[a-z]+\s*=|(?:href|src)\s*=|@import|url\s*\(|<!doctype|<!entity|<\?xml/i.test(text);
+}
+
 /** Zip-based formats (.zip, .apk, .aab, .ipa) start with PK\x03\x04. */
 export function sniffsLikeZip(buffer: Buffer): boolean {
   return (
@@ -67,15 +76,19 @@ export function mimeToExt(mime: string): string {
 }
 
 export interface StoredUpload {
-  absolutePath: string;
   url: string;
 }
 
 export async function saveMediaBuffer(buffer: Buffer, mime: string): Promise<StoredUpload> {
-  const dir = paths.mediaUploads;
-  await ensureDir(dir);
+  assertUploadStorage();
   const name = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}.${mimeToExt(mime)}`;
-  const absolutePath = path.join(dir, name);
-  await fs.writeFile(absolutePath, buffer);
-  return { absolutePath, url: `/uploads/media/${name}` };
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`media/${name}`, buffer, {
+      access: "public", contentType: mime, addRandomSuffix: false,
+    });
+    return { url: blob.url };
+  }
+  await ensureDir(paths.mediaUploads);
+  await fs.writeFile(path.join(paths.mediaUploads, name), buffer);
+  return { url: `/uploads/media/${name}` };
 }

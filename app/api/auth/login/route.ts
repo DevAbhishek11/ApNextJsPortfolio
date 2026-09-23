@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { fail, handled, ok, parseBody, tooManyRequests, unauthorized } from "@/lib/api";
 import { usersRepo } from "@/lib/db/repos";
-import { IS_SERVERLESS, reseedCollection } from "@/lib/db/store";
+import { assertWritableStore } from "@/lib/db/store";
 import { verifyPassword } from "@/lib/auth/password";
 import {
   SESSION_COOKIE, SESSION_MAX_AGE_DEFAULT, SESSION_MAX_AGE_REMEMBER, sessionSecret, signSession,
@@ -49,15 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Normalized lookup + one self-heal: if the users table somehow ended up
-    // empty/corrupt (deleted volume, bad restore), reseed it once so the
-    // documented default credentials work again.
-    let user = await usersRepo.findByEmail(input.email);
-    if (!user && (await usersRepo.all()).length === 0) {
-      console.warn("[auth] users table empty — reseeding admin from seed defaults");
-      await reseedCollection("users.json");
-      user = await usersRepo.findByEmail(input.email);
-    }
+    // Never authenticate against a temporary or seeded read-only copy: a
+    // password changed on one instance must be valid on every instance.
+    assertWritableStore();
+    const user = await usersRepo.findByEmail(input.email);
 
     // Uniform cost + message: never reveal which factor failed.
     const okPassword = user
@@ -69,11 +64,7 @@ export async function POST(request: NextRequest) {
         "Invalid email or password.",
         user || input.email.length === 0
           ? undefined
-          : {
-              hint: IS_SERVERLESS
-                ? "Serverless deploy detected: data lives in ephemeral storage and resets to the committed seed (data/seed/users.seed.json) on cold start."
-                : "If you previously changed the password, reset it with `npm run reset-admin` on the server.",
-            },
+          : { hint: "If you forgot your password, run `npm run reset-admin` against the configured persistent store." },
       );
     }
 

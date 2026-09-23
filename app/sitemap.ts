@@ -2,7 +2,8 @@ import type { MetadataRoute } from "next";
 import { getBlogPosts, getProjects } from "@/lib/db/cached";
 import { baseUrl } from "@/lib/utils";
 
-export const revalidate = 3600;
+// Published projects and posts are editable; sitemap must be fresh on request.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [projects, posts] = await Promise.all([getProjects(), getBlogPosts()]);

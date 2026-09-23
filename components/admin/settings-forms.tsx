@@ -227,6 +227,7 @@ export function PasswordForm() {
 
   return (
     <form
+      method="post"
       onSubmit={handleSubmit(onSubmit)}
       noValidate
       className="rounded-card border border-adm-border bg-adm-surface p-6 shadow-card"
@@ -235,7 +236,7 @@ export function PasswordForm() {
         <KeyRound size={16} className="text-accent" /> Change password
       </h2>
       <p className="mb-5 mt-1 text-xs text-adm-faint">
-        All active sessions are invalidated on change — you'll be signed out everywhere.
+        All active sessions are invalidated on change — you&apos;ll be signed out everywhere.
       </p>
       <div className="grid max-w-lg gap-4">
         {serverError && (

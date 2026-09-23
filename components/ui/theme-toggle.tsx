@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +10,17 @@ function currentTheme(): Theme {
   if (typeof document === "undefined") return "light";
   return document.documentElement.getAttribute("data-theme") === "dark" ? "dark" : "light";
 }
+function subscribeTheme(listener: () => void) {
+  window.addEventListener("ap-theme", listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    window.removeEventListener("ap-theme", listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+const serverTheme = (): Theme => "light";
+const clientMounted = () => true;
+const serverMounted = () => false;
 
 /**
  * Public-site theme toggle. Preferences live in localStorage under `ap-theme`
@@ -17,13 +28,8 @@ function currentTheme(): Theme {
  * app/layout.tsx — this button only flips + persists.
  */
 export default function ThemeToggle({ className }: { className?: string }) {
-  const [theme, setTheme] = useState<Theme>("light");
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setTheme(currentTheme());
-    setMounted(true);
-  }, []);
+  const theme = useSyncExternalStore(subscribeTheme, currentTheme, serverTheme);
+  const mounted = useSyncExternalStore(subscribeTheme, clientMounted, serverMounted);
 
   const toggle = useCallback(() => {
     const next: Theme = currentTheme() === "dark" ? "light" : "dark";
@@ -46,7 +52,7 @@ export default function ThemeToggle({ className }: { className?: string }) {
     } catch {
       /* private mode etc. — theme still applies for the session */
     }
-    setTheme(next);
+    window.dispatchEvent(new Event("ap-theme"));
   }, []);
 
   const dark = theme === "dark";

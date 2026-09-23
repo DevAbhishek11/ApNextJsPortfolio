@@ -149,7 +149,7 @@ export default function SearchDialog() {
       .map((x) => x.d);
   }, [docs, query]);
 
-  useEffect(() => setCursor(0), [results.length]);
+  const activeCursor = Math.min(cursor, Math.max(results.length - 1, 0));
 
   const go = useCallback(
     (doc: SearchDoc) => {
@@ -171,8 +171,8 @@ export default function SearchDialog() {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setCursor((c) => Math.max(c - 1, 0));
-    } else if (e.key === "Enter" && results[cursor]) {
-      go(results[cursor]);
+    } else if (e.key === "Enter" && results[activeCursor]) {
+      go(results[activeCursor]);
     }
   };
 
@@ -180,9 +180,9 @@ export default function SearchDialog() {
   useEffect(() => {
     if (!listRef.current) return;
     listRef.current
-      .querySelector(`[data-idx="${cursor}"]`)
+      .querySelector(`[data-idx="${activeCursor}"]`)
       ?.scrollIntoView({ block: "nearest" });
-  }, [cursor]);
+  }, [activeCursor]);
 
   if (!open) return null;
 
@@ -205,14 +205,14 @@ export default function SearchDialog() {
           <input
             ref={inputRef}
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => { setQuery(e.target.value); setCursor(0); }}
             onKeyDown={onKeyDown}
             placeholder="Search projects, posts, tech…"
             aria-label="Search query"
             role="combobox"
             aria-expanded="true"
             aria-controls="search-results"
-            aria-activedescendant={results[cursor] ? `sr-${results[cursor].href}` : undefined}
+            aria-activedescendant={results[activeCursor] ? `sr-${results[activeCursor].href}` : undefined}
             className="w-full bg-transparent text-[0.95rem] text-ink outline-none placeholder:text-faint"
           />
           <button
@@ -247,13 +247,13 @@ export default function SearchDialog() {
           {!error && docs !== null && results.length > 0 && (
             <ul>
               {results.map((doc, i) => (
-                <li key={doc.href} data-idx={i} role="option" aria-selected={cursor === i} id={`sr-${doc.href}`}>
+                <li key={doc.href} data-idx={i} role="option" aria-selected={activeCursor === i} id={`sr-${doc.href}`}>
                   <button
                     onClick={() => go(doc)}
                     onMouseEnter={() => setCursor(i)}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                      cursor === i ? "bg-accent-soft" : "hover:bg-surface-2",
+                      activeCursor === i ? "bg-accent-soft" : "hover:bg-surface-2",
                     )}
                   >
                     <span
@@ -277,7 +277,7 @@ export default function SearchDialog() {
                         </span>
                       ))}
                     </span>
-                    {cursor === i && <CornerDownLeft size={13} className="shrink-0 text-accent" />}
+                    {activeCursor === i && <CornerDownLeft size={13} className="shrink-0 text-accent" />}
                   </button>
                 </li>
               ))}
@@ -291,7 +291,7 @@ export default function SearchDialog() {
                 {recents.map((r) => (
                   <button
                     key={r}
-                    onClick={() => setQuery(r)}
+                    onClick={() => { setQuery(r); setCursor(0); }}
                     className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-ink"
                   >
                     <Tag size={11} /> {r}

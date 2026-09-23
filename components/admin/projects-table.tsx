@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+
 import {
   ArrowUpDown, Copy, ExternalLink, FolderKanban, PencilLine, Plus, Search, Star, StarOff, Trash2,
 } from "lucide-react";
@@ -15,7 +15,6 @@ import type { ApiResponse, Project } from "@/lib/types";
 type SortKey = "order" | "title" | "updatedAt";
 
 export default function ProjectsTable({ initial }: { initial: Project[] }) {
-  const router = useRouter();
   const toast = useToast();
   const [items, setItems] = useState(initial);
   const [query, setQuery] = useState("");

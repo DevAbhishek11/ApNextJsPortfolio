@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Bell, ChevronRight, LogOut, Menu, Search, User2 } from "lucide-react";
 import ThemeToggle from "./theme-toggle";
-import { cn } from "@/lib/utils";
+
 
 const titles: Record<string, string> = {
   "/admin": "Overview",

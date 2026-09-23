@@ -102,10 +102,9 @@ export function TableOfContents({
 }
 
 export function ShareButtons({ title, text }: { title: string; text: string }) {
-  const [url, setUrl] = useState("");
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => setUrl(window.location.href), []);
+  // Resolve at click time, so navigation and hydration cannot leave a stale URL.
+  const currentUrl = () => window.location.href;
 
   const share = (target: string) => {
     window.open(target, "_blank", "noopener,noreferrer,width=640,height=520");
@@ -121,7 +120,7 @@ export function ShareButtons({ title, text }: { title: string; text: string }) {
         aria-label="Share on X / Twitter"
         onClick={() =>
           share(
-            `https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(url)}`,
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(text || title)}&url=${encodeURIComponent(currentUrl())}`,
           )
         }
       >
@@ -131,7 +130,7 @@ export function ShareButtons({ title, text }: { title: string; text: string }) {
         className={iconCls}
         aria-label="Share on LinkedIn"
         onClick={() =>
-          share(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`)
+          share(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl())}`)
         }
       >
         <LinkedinIcon size={15} />
@@ -141,7 +140,7 @@ export function ShareButtons({ title, text }: { title: string; text: string }) {
         aria-label="Copy link"
         onClick={async () => {
           try {
-            await navigator.clipboard.writeText(url);
+            await navigator.clipboard.writeText(currentUrl());
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
           } catch {
