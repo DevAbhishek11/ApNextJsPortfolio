@@ -84,7 +84,13 @@ if (!target) {
 }
 
 target.passwordHash = hash;
-target.role = target.role ?? "admin";
+// Guarantee the target ends up with the admin role — the whole point of this
+// recovery tool is to restore admin access, even if the admin record was
+// corrupted / lost its role / deleted (leaving only other users behind).
+if (target.role !== "admin") {
+  console.log(`  note: target had no admin role ("${target.role ?? "none"}") — set to "admin".`);
+  target.role = "admin";
+}
 target.tokenVersion = (target.tokenVersion ?? 1) + 1; // invalidate all live sessions
 
 await fs.mkdir(DATA_DIR, { recursive: true });
