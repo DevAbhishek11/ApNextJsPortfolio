@@ -12,18 +12,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * Applies BOTH theme scopes to <html> BEFORE first paint so nothing flashes:
- *  - admin routes use the independent `ap-admin-theme` preference
+ *  - admin routes use `ap-admin-theme`, falling back to the saved CMS default
  *  - public routes use `ap-theme` (falling back to the OS preference)
  * Also mirrors effective dark mode into `color-scheme` for native controls.
  */
-const themeBootScript = `
+const themeBootScript = (adminDefault: "light" | "dark") => `
 (function () {
   try {
     var isAdmin = location.pathname.startsWith("/admin");
     var stored = localStorage.getItem(isAdmin ? "ap-admin-theme" : "ap-theme");
     var theme = stored === "light" || stored === "dark"
       ? stored
-      : (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+      : (isAdmin ? "${adminDefault}" :
+         (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark"));
     var root = document.documentElement;
     root.setAttribute("data-theme", theme);
     var meta = document.createElement("meta");
@@ -34,7 +35,10 @@ const themeBootScript = `
 })();
 `;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSettings();
+  // Constrain the interpolated value even if an imported DB row is malformed.
+  const adminDefault = settings.theme?.adminDefault === "light" ? "light" : "dark";
   return (
     <html
       lang="en"
@@ -42,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript(adminDefault) }} />
       </head>
       <body className="min-h-full flex flex-col bg-bg text-ink font-sans">{children}</body>
     </html>

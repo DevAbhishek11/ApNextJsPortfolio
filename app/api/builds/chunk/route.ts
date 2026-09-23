@@ -1,4 +1,5 @@
-import { badRequest, handled, notFound, ok, payloadTooLarge, unauthorized } from "@/lib/api";
+import { badRequest, conflict, handled, notFound, ok, payloadTooLarge, unauthorized } from "@/lib/api";
+import { directBuildUploads } from "@/lib/blob-storage";
 import { getSessionUser } from "@/lib/auth/guard";
 import { appendUploadChunk, UploadError } from "@/lib/build-uploads";
 
@@ -7,6 +8,7 @@ export async function PUT(request: Request) {
   return handled(async () => {
     const user = await getSessionUser();
     if (!user) return unauthorized();
+    if (directBuildUploads()) return conflict("Use direct-to-Blob upload for builds on this deployment.");
 
     const id = new URL(request.url).searchParams.get("id") ?? "";
     if (!id) return badRequest("Missing upload id.");

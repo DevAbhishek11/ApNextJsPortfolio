@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Inbox, Mail, MailOpen, Reply, Search, Trash2 } from "lucide-react";
 import { Badge, EmptyState } from "@/components/ui/surface";
 import { useToast } from "@/components/ui/toast";
@@ -10,6 +11,7 @@ import type { ApiResponse, Message } from "@/lib/types";
 
 export default function MessagesInbox({ initial }: { initial: Message[] }) {
   const toast = useToast();
+  const router = useRouter();
   const [items, setItems] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "unread">("all");
@@ -41,7 +43,8 @@ export default function MessagesInbox({ initial }: { initial: Message[] }) {
         body: JSON.stringify({ read }),
       });
       const json = (await res.json()) as ApiResponse<unknown>;
-      if (!json.success) throw new Error(json.error.message);
+      if (!res.ok || !json.success) throw new Error(json.success ? "Update failed" : json.error.message);
+      router.refresh(); // refresh the unread badge in the admin sidebar
     } catch (err) {
       setItems((prev) => prev.map((x) => (x.id === m.id ? { ...x, read: !read } : x)));
       toast.error(err instanceof Error ? err.message : "Update failed.");
@@ -61,6 +64,7 @@ export default function MessagesInbox({ initial }: { initial: Message[] }) {
       if (!res.ok || !json.success) throw new Error(json.success ? "Delete failed" : json.error.message);
       setItems((prev) => prev.filter((x) => x.id !== toDelete.id));
       if (activeId === toDelete.id) setActiveId(null);
+      router.refresh(); // refresh the unread badge in the admin sidebar
       toast.success("Message deleted.");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Delete failed.");

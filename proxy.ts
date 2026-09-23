@@ -35,10 +35,10 @@ export async function proxy(request: NextRequest) {
   const valid = await hasValidSession(request);
   const onLogin = pathname === "/admin/login";
 
-  if (onLogin && valid) {
-    return NextResponse.redirect(new URL("/admin", request.url));
-  }
-
+  // Never redirect a signed cookie away from the login page. The proxy only
+  // verifies its signature; a password change can invalidate tokenVersion in
+  // the database while the JWT is still signed. Redirecting here would loop:
+  // /admin → layout rejects stale session → /admin/login → /admin ...
   if (!onLogin && !valid) {
     const login = new URL("/admin/login", request.url);
     if (pathname && pathname !== "/admin") login.searchParams.set("next", pathname);

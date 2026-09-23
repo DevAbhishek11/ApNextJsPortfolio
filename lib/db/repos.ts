@@ -1,4 +1,5 @@
 import { readJson, updateJson, writeJson } from "./store";
+import { hashPassword, verifyPassword } from "@/lib/auth/password";
 import type {
   BlogPost,
   Build,
@@ -37,20 +38,24 @@ export const usersRepo = {
     const users = await this.all();
     return users.find((u) => u.id === id) ?? null;
   },
-  async updatePassword(id: string, passwordHash: string): Promise<User | null> {
-    let updated: User | null = null;
-    await updateJson<User[]>("users.json", [], (users) =>
-      users.map((u) => {
-        if (u.id !== id) return u;
-        updated = {
-          ...u,
-          passwordHash,
-          tokenVersion: (u.tokenVersion ?? 1) + 1, // kills existing sessions
-        };
-        return updated;
-      }),
-    );
-    return updated;
+  async changePassword(id: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    let changed = false;
+    // Verify inside the serialized/CAS transaction, not against an earlier
+    // read: two simultaneous changes must not both accept the old password.
+    await updateJson<User[]>("users.json", [], async (users) => {
+      const user = users.find((u) => u.id === id);
+      if (!user || !(await verifyPassword(currentPassword, user.passwordHash))) {
+        changed = false;
+        return users;
+      }
+      const passwordHash = await hashPassword(newPassword);
+      changed = true;
+      return users.map((u) => u.id === id ? {
+        ...u, passwordHash,
+        tokenVersion: (u.tokenVersion ?? 1) + 1, // kills every existing session
+      } : u);
+    });
+    return changed;
   },
 };
 

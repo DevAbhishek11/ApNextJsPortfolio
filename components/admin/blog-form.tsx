@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +34,7 @@ function toLocalInputValue(iso: string): string {
 export default function BlogForm({ initial, author }: { initial?: BlogPost; author: string }) {
   const router = useRouter();
   const toast = useToast();
-  const slugTouched = useRef(!!initial);
+  const [slugTouched, setSlugTouched] = useState(!!initial);
 
   const {
     register,
@@ -109,6 +109,10 @@ export default function BlogForm({ initial, author }: { initial?: BlogPost; auth
   });
 
   const previewSlug = getValues("slug");
+  const updateSlugFromTitle = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!slugTouched) setValue("slug", slugify(e.target.value), { shouldValidate: false });
+  };
+  const markSlugTouched = () => setSlugTouched(true);
 
   return (
     <form onSubmit={wrapSubmit} noValidate className="grid gap-5 xl:grid-cols-[1fr_360px]">
@@ -122,13 +126,7 @@ export default function BlogForm({ initial, author }: { initial?: BlogPost; auth
                 area="adm"
                 invalid={!!errors.title}
                 placeholder="A title worth clicking"
-                {...register("title", {
-                  onChange: (e) => {
-                    if (!slugTouched.current) {
-                      setValue("slug", slugify(e.target.value), { shouldValidate: false });
-                    }
-                  },
-                })}
+                {...register("title", { onChange: updateSlugFromTitle })}
               />
             </Field>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -137,7 +135,7 @@ export default function BlogForm({ initial, author }: { initial?: BlogPost; auth
                   id="bf-slug"
                   area="adm"
                   invalid={!!errors.slug}
-                  {...register("slug", { onChange: () => (slugTouched.current = true) })}
+                  {...register("slug", { onChange: markSlugTouched })}
                 />
               </Field>
               <Field label="Author" error={errors.author?.message} htmlFor="bf-author">

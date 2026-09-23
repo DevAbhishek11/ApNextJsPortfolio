@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
   },
-  // Large app-build uploads (up to 150MB) are streamed through chunked
-  // route handlers on the Node runtime — see app/api/builds/*.
-  // This app must run on a persistent Node server; it is NOT designed
-  // for serverless platforms with ephemeral filesystems.
+  // Allow Arena's proxied live-preview host to load Next dev assets.
+  allowedDevOrigins: ["*.e2b.app"],
+  // On persistent servers, build uploads use the local chunked routes. On
+  // serverless, the client sends multipart builds directly to Vercel Blob;
+  // all metadata and credentials use the shared PostgreSQL database.
 };
 
 export default nextConfig;

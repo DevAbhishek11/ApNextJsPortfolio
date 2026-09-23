@@ -5,10 +5,12 @@ import { buildsRepo } from "@/lib/db/repos";
 import { finalizeUpload, readUploadSession, UploadError } from "@/lib/build-uploads";
 import { sniffsLikeGzip, sniffsLikeZip } from "@/lib/upload";
 import { uid } from "@/lib/utils";
+import { directBuildUploads } from "@/lib/blob-storage";
+import { BlobBuildError, finalizeBlobBuild, verifyBlobBuildUpload } from "@/lib/blob-builds";
 import { z } from "zod";
 import type { Build, BuildPlatform } from "@/lib/types";
 
-const finalizeSchema = z.object({ uploadId: z.string().min(6).max(80) });
+const finalizeSchema = z.object({ uploadId: z.string().min(6).max(2048), blobUrl: z.string().url().max(2048).optional() });
 
 // POST /api/builds/finalize — verify size + magic bytes, move into place,
 // register in builds.json.
@@ -17,7 +19,18 @@ export async function POST(request: Request) {
     const user = await getSessionUser();
     if (!user) return unauthorized();
 
-    const { uploadId } = await parseBody(request, finalizeSchema);
+    const { uploadId, blobUrl } = await parseBody(request, finalizeSchema);
+    if (directBuildUploads()) {
+      const plan = await verifyBlobBuildUpload(uploadId, user.id);
+      if (!plan || !blobUrl) return badRequest("Invalid build upload session or missing Blob URL.");
+      try {
+        const build = await finalizeBlobBuild(plan, blobUrl);
+        return ok(build, { status: 201 });
+      } catch (err) {
+        if (err instanceof BlobBuildError) return badRequest(err.message);
+        throw err;
+      }
+    }
     const session = await readUploadSession(uploadId);
     if (!session) return notFound("Upload session not found or already finalized.");
 

@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowUpRight, ArrowRight } from "lucide-react";
 import { GithubIcon } from "@/components/ui/brand-icons";
 import { Container, Section } from "@/components/ui/container";
 import { Reveal } from "@/components/animation/reveal";
-import { Badge, Tag } from "@/components/ui/surface";
+import { Tag } from "@/components/ui/surface";
 import GalleryLightbox from "@/components/projects/gallery-lightbox";
 import ProjectCard from "@/components/projects/project-card";
 import { RevealGroup } from "@/components/animation/reveal";
@@ -40,11 +40,7 @@ export default async function ProjectDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [project, all, settings] = await Promise.all([
-    getProjectBySlug(slug),
-    getProjects(),
-    getSettings(),
-  ]);
+  const [project, all] = await Promise.all([getProjectBySlug(slug), getProjects()]);
   if (!project || project.status !== "published") notFound();
 
   const related = all

@@ -17,9 +17,10 @@ export default function BlogTable({ initial }: { initial: BlogPost[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toDelete, setToDelete] = useState<Set<string> | null>(null);
   const [busy, setBusy] = useState(false);
+  const [now] = useState(() => Date.now());
 
   const isVisible = (p: BlogPost) =>
-    p.status === "published" && new Date(p.publishedAt).getTime() <= Date.now();
+    p.status === "published" && new Date(p.publishedAt).getTime() <= now;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -224,7 +225,7 @@ export default function BlogTable({ initial }: { initial: BlogPost[] }) {
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 text-xs text-adm-muted">
                     {formatDate(p.publishedAt, { month: "short", day: "numeric", year: "numeric" })}
-                    {p.status === "published" && new Date(p.publishedAt).getTime() > Date.now() && (
+                    {p.status === "published" && new Date(p.publishedAt).getTime() > now && (
                       <Badge tone="amber" className="ml-2">scheduled</Badge>
                     )}
                   </td>

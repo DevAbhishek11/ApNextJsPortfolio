@@ -1,9 +1,9 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { handled, ok, payloadTooLarge, unauthorized, badRequest } from "@/lib/api";
+import { IS_SERVERLESS } from "@/lib/db/store";
+import { assertUploadStorage, deleteStoredUpload } from "@/lib/blob-storage";
 import { getSessionUser } from "@/lib/auth/guard";
 import { mediaRepo } from "@/lib/db/repos";
-import { isAllowedImage, saveMediaBuffer, sniffImageMime } from "@/lib/upload";
+import { isAllowedImage, isSafeSvg, saveMediaBuffer, sniffImageMime } from "@/lib/upload";
 import { MAX_IMAGE_BYTES } from "@/lib/validation/schemas";
 import { uid } from "@/lib/utils";
 import type { MediaItem } from "@/lib/types";
@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   return handled(async () => {
     const user = await getSessionUser();
     if (!user) return unauthorized();
+    assertUploadStorage();
 
     let form: FormData;
     try {
@@ -49,18 +50,19 @@ export async function POST(request: Request) {
           errors.push({ name: file.name, message: "File exceeds the 12MB image limit." });
           continue;
         }
+        if (IS_SERVERLESS && file.size > 4 * 1024 * 1024) {
+          errors.push({ name: file.name, message: "Files over 4MB must use the dashboard's direct-to-Blob upload." });
+          continue;
+        }
         const buffer = Buffer.from(await file.arrayBuffer());
         const mime = sniffImageMime(buffer);
         if (!isAllowedImage(mime)) {
           errors.push({ name: file.name, message: "Unsupported or tampered image type." });
           continue;
         }
-        if (mime === "image/svg+xml") {
-          const text = buffer.toString("utf8").toLowerCase();
-          if (text.includes("<script") || text.includes("onload=") || text.includes("foreignobject")) {
-            errors.push({ name: file.name, message: "SVG contains disallowed active content." });
-            continue;
-          }
+        if (mime === "image/svg+xml" && !isSafeSvg(buffer)) {
+          errors.push({ name: file.name, message: "SVG contains disallowed active content." });
+          continue;
         }
         const stored = await saveMediaBuffer(buffer, mime);
         const item: MediaItem = {
@@ -82,7 +84,7 @@ export async function POST(request: Request) {
 
     if (saved.length === 0) {
       const first = errors[0];
-      if (first && first.message.includes("limit")) return payloadTooLarge(first.message);
+      if (first && (first.message.includes("limit") || first.message.includes("over 4MB"))) return payloadTooLarge(first.message);
       return badRequest(first ? first.message : "Upload failed.", first ? { file: first.message } : undefined);
     }
     return ok({ items: saved, errors }, { status: 201 });
@@ -97,10 +99,10 @@ export async function DELETE(request: Request) {
     if (!body.id) return badRequest("Missing media id.");
     const removed = await mediaRepo.remove(body.id);
     if (!removed) return badRequest("Media item not found.");
-    if (removed.source === "upload" && removed.url.startsWith("/uploads/")) {
-      await fs
-        .unlink(path.join(process.cwd(), "public", removed.url))
-        .catch(() => undefined);
+    if (removed.source === "upload") {
+      await deleteStoredUpload(removed.url, "media").catch((err) =>
+        console.error("[media] stored file cleanup failed:", err),
+      );
     }
     return ok({ deleted: true });
   });

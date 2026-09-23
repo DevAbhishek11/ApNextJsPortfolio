@@ -3,7 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { Readable } from "node:stream";
-import { paths } from "@/lib/db/store";
+import { IS_SERVERLESS, paths } from "@/lib/db/store";
 
 // ---------------------------------------------------------------------------
 // Runtime uploads handler — serves files created by the CMS at runtime
@@ -60,6 +60,8 @@ function safeResolve(segments: string[]): string | null {
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
+  // Serverless uploads use public Blob URLs, never an ephemeral /tmp copy.
+  if (IS_SERVERLESS) return new NextResponse(null, { status: 404 });
   try {
     const { path: segments } = await params;
     const full = safeResolve(segments ?? []);
@@ -67,7 +69,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
 
     let stat;
     try {
-      stat = await fs.stat(full);
+      // Runtime volume contents aren't build inputs. Suppress whole-project tracing.
+      stat = await fs.stat(/*turbopackIgnore: true*/ full);
     } catch {
       return new NextResponse(null, { status: 404 });
     }
@@ -91,7 +94,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
       headers.set("content-security-policy", "script-src 'none'");
     }
 
-    const stream = Readable.toWeb(createReadStream(full)) as ReadableStream;
+    const stream = Readable.toWeb(createReadStream(/*turbopackIgnore: true*/ full)) as ReadableStream;
     return new NextResponse(stream, { status: 200, headers });
   } catch (err) {
     console.error("[uploads] serve failed:", err);

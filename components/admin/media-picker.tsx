@@ -7,20 +7,7 @@ import { EmptyState } from "@/components/ui/surface";
 import { useToast } from "@/components/ui/toast";
 import { cn, formatBytes } from "@/lib/utils";
 import type { ApiResponse, MediaItem } from "@/lib/types";
-
-async function uploadOne(file: File): Promise<MediaItem> {
-  const form = new FormData();
-  form.append("files", file);
-  const res = await fetch("/api/media", { method: "POST", body: form });
-  const json = (await res.json()) as ApiResponse<{ items: MediaItem[]; errors: { name: string; message: string }[] }>;
-  if (!res.ok || !json.success) {
-    throw new Error(json.success ? "Upload failed" : json.error.message);
-  }
-  if (json.data.items.length === 0) {
-    throw new Error(json.data.errors[0]?.message ?? "Upload failed");
-  }
-  return json.data.items[0];
-}
+import { uploadMedia } from "./media-upload";
 
 /** Modal listing the media library with inline upload; resolves a URL on select. */
 export default function MediaPicker({
@@ -54,7 +41,9 @@ export default function MediaPicker({
   }, [toast]);
 
   useEffect(() => {
-    if (open) void load();
+    if (!open) return;
+    const pending = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(pending);
   }, [open, load]);
 
   const filtered = items.filter((m) =>
@@ -67,7 +56,7 @@ export default function MediaPicker({
     setUploading(true);
     try {
       for (const file of list) {
-        const item = await uploadOne(file);
+        const item = await uploadMedia(file);
         setItems((prev) => [item, ...prev]);
         setSelected(item.url);
       }

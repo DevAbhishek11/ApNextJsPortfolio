@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { ArrowDown, ArrowUp, GripVertical, ImagePlus, Plus, Trash2, X } from "lucide-react";
@@ -147,13 +147,12 @@ function KeyFeaturesEditor({
 export default function ProjectForm({ initial }: { initial?: Project }) {
   const router = useRouter();
   const toast = useToast();
-  const slugTouched = useRef(!!initial);
+  const [slugTouched, setSlugTouched] = useState(!!initial);
 
   const {
     register,
     control,
     handleSubmit,
-    watch,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<z.input<typeof projectSchema>, undefined, ProjectInput>({
@@ -199,7 +198,7 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
         },
   });
 
-  const featured = watch("featured");
+  const featured = useWatch({ control, name: "featured" });
 
   const onSubmit = async (values: ProjectInput) => {
     try {
@@ -246,7 +245,7 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
                 placeholder="e.g. Invoice System"
                 {...register("title", {
                   onChange: (e) => {
-                    if (!slugTouched.current) {
+                    if (!slugTouched) {
                       setValue("slug", slugify(e.target.value), { shouldValidate: false });
                     }
                   },
@@ -259,7 +258,7 @@ export default function ProjectForm({ initial }: { initial?: Project }) {
                 area="adm"
                 invalid={!!errors.slug}
                 placeholder="invoice-system"
-                {...register("slug", { onChange: () => (slugTouched.current = true) })}
+                {...register("slug", { onChange: () => setSlugTouched(true) })}
               />
             </Field>
             <Field label="Short description" required error={errors.shortDescription?.message} hint="Shown on cards and in search results." htmlFor="pf-short">

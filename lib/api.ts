@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ZodError, type ZodType } from "zod";
 import type { ApiFailure } from "@/lib/types";
+import { StorageConfigurationError } from "@/lib/db/store";
 
 // ---------------------------------------------------------------------------
 // Consistent API envelope:
@@ -85,6 +86,7 @@ export async function handled(fn: () => Promise<NextResponse>): Promise<NextResp
     return await fn();
   } catch (err) {
     if (err instanceof ApiHandledError) return err.response;
+    if (err instanceof StorageConfigurationError) return fail(503, "STORAGE_NOT_CONFIGURED", err.message);
     console.error("[api] unexpected error:", err);
     return serverError();
   }

@@ -11,7 +11,7 @@
  * projects, blog, media, messages, builds and settings. Resource IPs are
  * spoofed via X-Forwarded-For so rate-limit tests can't lock out real users.
  */
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -394,24 +394,59 @@ async function main() {
   const probeTagline = `E2E probe ${runId}`;
   const spatch = await apiReq("/api/settings", {
     method: "PATCH",
-    json: { ...settingsBefore.json?.data, profile: { ...settingsBefore.json?.data?.profile, tagline: probeTagline } },
+    json: { ...settingsBefore.json?.data,
+      profile: { ...settingsBefore.json?.data?.profile, tagline: probeTagline },
+      theme: { adminDefault: "light" },
+    },
   });
   ok(spatch.status === 200, "settings PATCH accepted");
   const aboutAfter = await req("/about");
   ok(aboutAfter.text.includes(probeTagline), "  public site reflects settings immediately", "");
+  const freshSettings = await apiReq("/api/settings");
+  ok(freshSettings.json?.data?.profile?.tagline === probeTagline,
+    "  updated settings read back from persistent store");
+  const loginTheme = await req("/admin/login");
+  ok(loginTheme.text.includes('isAdmin ? "light"'), "  admin theme default reflects settings");
   await apiReq("/api/settings", {
     method: "PATCH",
     json: { ...settingsBefore.json?.data, profile: { ...settingsBefore.json?.data?.profile, tagline: origTagline } },
   });
 
   const TEMP_PASS = "E2eProbe-123";
+  const wrongCurrent = await apiReq("/api/settings/password", {
+    method: "POST",
+    json: { currentPassword: "not-the-password", newPassword: TEMP_PASS, confirmPassword: TEMP_PASS },
+  });
+  ok(wrongCurrent.status === 400, "incorrect current password refused", `got ${wrongCurrent.status}`);
+  const mismatch = await apiReq("/api/settings/password", {
+    method: "POST",
+    json: { currentPassword: PASSWORD, newPassword: TEMP_PASS, confirmPassword: "Mismatch999" },
+  });
+  ok(mismatch.status === 400, "mismatched new passwords refused", `got ${mismatch.status}`);
+  const firstSession = jar.get("ap_session");
+  const secondLogin = await apiReq("/api/auth/login", {
+    method: "POST", json: { email: EMAIL, password: PASSWORD }, spoofIp: "10.90.7.71",
+  });
+  ok(secondLogin.status === 200, "second active session issued", `got ${secondLogin.status}`);
+  const oldSession = jar.get("ap_session");
   const p1 = await apiReq("/api/settings/password", {
     method: "POST",
     json: { currentPassword: PASSWORD, newPassword: TEMP_PASS, confirmPassword: TEMP_PASS },
   });
   ok(p1.status === 200, "password change accepted", `got ${p1.status} ${JSON.stringify(p1.json?.error ?? "")}`);
+  if (oldSession) jar.set("ap_session", oldSession);
   const meAfter = await apiReq("/api/auth/me");
-  ok(meAfter.status === 401, "  old session invalidated after password change", `got ${meAfter.status}`);
+  ok(meAfter.status === 401, "  current session invalidated after password change", `got ${meAfter.status}`);
+  if (firstSession) jar.set("ap_session", firstSession);
+  const otherSessionAfter = await apiReq("/api/auth/me");
+  ok(otherSessionAfter.status === 401, "  other active session invalidated too", `got ${otherSessionAfter.status}`);
+  const staleAdmin = await req("/admin");
+  ok(staleAdmin.status === 307 && (staleAdmin.headers.get("location") ?? "").includes("/admin/login"),
+    "  stale device redirected to login", `got ${staleAdmin.status}`);
+  const staleLoginPage = await req("/admin/login");
+  ok(staleLoginPage.status === 200, "  login page reachable with stale signed cookie (no loop)",
+    `got ${staleLoginPage.status}`);
+  jar.delete("ap_session");
   const badRelog = await apiReq("/api/auth/login", {
     method: "POST", json: { email: EMAIL, password: PASSWORD }, spoofIp: "10.90.7.70",
   });

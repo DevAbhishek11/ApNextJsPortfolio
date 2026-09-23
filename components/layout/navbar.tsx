@@ -31,7 +31,8 @@ export default function Navbar({ name }: { name: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const open = openPath === pathname;
   const [progress, setProgress] = useState(0);
 
   const listRef = useRef<HTMLUListElement>(null);
@@ -60,8 +61,7 @@ export default function Navbar({ name }: { name: string }) {
     };
   }, []);
 
-  useEffect(() => setOpen(false), [pathname]);
-
+  // Path-tied open state closes the menu on navigation without an effect.
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
     return () => {
@@ -192,7 +192,7 @@ export default function Navbar({ name }: { name: string }) {
               className="inline-flex h-9 w-9 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface-2 lg:hidden"
               aria-expanded={open}
               aria-label={open ? "Close menu" : "Open menu"}
-              onClick={() => setOpen((o) => !o)}
+              onClick={() => setOpenPath((p) => p === pathname ? null : pathname)}
             >
               {open ? <X size={19} /> : <Menu size={19} />}
             </button>
@@ -213,7 +213,7 @@ export default function Navbar({ name }: { name: string }) {
             "bg-bg/70 backdrop-blur-2xl",
             open ? "opacity-100" : "opacity-0",
           )}
-          onClick={() => setOpen(false)}
+          onClick={() => setOpenPath(null)}
           aria-hidden
         />
         <div
@@ -241,7 +241,7 @@ export default function Navbar({ name }: { name: string }) {
                   <Link
                     href={link.href}
                     aria-current={active ? "page" : undefined}
-                    onClick={() => setOpen(false)}
+                    onClick={() => setOpenPath(null)}
                     className={cn(
                       "group flex items-center justify-between rounded-2xl px-4 py-3.5",
                       active ? "bg-accent-soft text-accent" : "text-ink hover:bg-surface-2",
@@ -276,7 +276,7 @@ export default function Navbar({ name }: { name: string }) {
             <button
               type="button"
               onClick={() => {
-                setOpen(false);
+                setOpenPath(null);
                 requestAnimationFrame(openSearch);
               }}
               className="inline-flex items-center gap-2 rounded-full border border-border px-3.5 py-2 text-xs font-medium text-muted"

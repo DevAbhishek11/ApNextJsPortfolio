@@ -5,6 +5,9 @@ import { ToastProvider } from "@/components/ui/toast";
 import SearchDialog from "@/components/ui/search-dialog";
 import { getSettings } from "@/lib/db/cached";
 
+// The CMS is live data: never serve HTML prerendered from a build-time seed.
+export const dynamic = "force-dynamic";
+
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSettings();
   return (

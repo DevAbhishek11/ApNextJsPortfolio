@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +17,17 @@ interface NavItem {
 }
 
 const EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
+
+function subscribeCollapsed(listener: () => void) {
+  window.addEventListener("storage", listener);
+  window.addEventListener("ap-admin-sidebar", listener);
+  return () => {
+    window.removeEventListener("storage", listener);
+    window.removeEventListener("ap-admin-sidebar", listener);
+  };
+}
+const getCollapsed = () => localStorage.getItem("ap-admin-sidebar") === "1";
+const getServerCollapsed = () => false;
 
 function NavContent({
   items,
@@ -123,15 +134,8 @@ export default function AdminSidebar({
   onMobileClose: () => void;
 }) {
   const pathname = usePathname();
-  const [collapsed, setCollapsed] = useState(false);
-  const [unread, setUnread] = useState(unreadMessages);
-
-  useEffect(() => setUnread(unreadMessages), [unreadMessages]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem("ap-admin-sidebar");
-    if (stored === "1") setCollapsed(true);
-  }, []);
+  const collapsed = useSyncExternalStore(subscribeCollapsed, getCollapsed, getServerCollapsed);
+  const unread = unreadMessages;
 
   const initials = name
     .split(" ")
@@ -185,11 +189,8 @@ export default function AdminSidebar({
           </Link>
           <button
             onClick={() => {
-              setCollapsed((c) => {
-                const next = !c;
-                localStorage.setItem("ap-admin-sidebar", next ? "1" : "0");
-                return next;
-              });
+              localStorage.setItem("ap-admin-sidebar", collapsed ? "0" : "1");
+              window.dispatchEvent(new Event("ap-admin-sidebar"));
             }}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             aria-expanded={!collapsed}

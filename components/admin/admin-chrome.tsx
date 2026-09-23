@@ -22,15 +22,15 @@ export default function AdminChrome({
   unreadMessages: number;
 }) {
   const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
-
-  // Close the drawer on every navigation.
-  useEffect(() => setMobileOpen(false), [pathname]);
+  // The drawer is tied to the path where it was opened. Navigation closes it
+  // without synchronously setting state from an effect.
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const mobileOpen = openPath === pathname;
 
   // Esc closes the drawer.
   useEffect(() => {
     if (!mobileOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMobileOpen(false);
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenPath(null);
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [mobileOpen]);
@@ -41,13 +41,13 @@ export default function AdminChrome({
         unreadMessages={unreadMessages}
         name={userName}
         mobileOpen={mobileOpen}
-        onMobileClose={() => setMobileOpen(false)}
+        onMobileClose={() => setOpenPath(null)}
       />
       <div className="flex h-full min-w-0 flex-1 flex-col">
         <AdminTopbar
           userName={userName}
           unreadMessages={unreadMessages}
-          onMenuOpen={() => setMobileOpen(true)}
+          onMenuOpen={() => setOpenPath(pathname)}
         />
         <main id="admin-main" className="admin-scroll min-w-0 flex-1 overflow-y-auto p-5 sm:p-7">
           {children}

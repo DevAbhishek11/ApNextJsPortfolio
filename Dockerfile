@@ -3,11 +3,9 @@
 # ---------------------------------------------------------------------------
 # Portfolio + Blog + Admin CMS — production image
 #
-# This app REQUIRES a persistent filesystem and a long-running Node process
-# (JSON data store in /app/data, media in /app/public/uploads, chunked build
-# uploads). It is NOT a serverless app — deploy to a VPS / Railway / Render /
-# Fly / any container host, and mount volumes for /app/data and
-# /app/public/uploads (see docker-compose.yml).
+# The Docker deployment uses persistent volumes for JSON content and uploads
+# by default. Serverless deployments use external Postgres + Vercel Blob
+# instead; see README. Mount volumes here (see docker-compose.yml).
 # ---------------------------------------------------------------------------
 
 FROM node:22-alpine AS deps
@@ -39,16 +37,15 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
-# Seed content examples — the runtime volume shadows /app/data, so these live
-# OUTSIDE the volume path; the data layer copies them in on first boot
-# (lib/db/store.ts → SEED_FALLBACK_DIR).
+# Recovery scripts use seed examples outside the runtime volume; the app
+# bundles the same examples as static imports for first-boot seeding.
 COPY --from=builder --chown=nextjs:nodejs /app/data/seed /app/seed-defaults
 
 # Recovery/utility scripts (admin password reset, seed regeneration).
 COPY --from=builder --chown=nextjs:nodejs /app/scripts /app/scripts
 
 # Writable runtime state: JSON data store + uploaded media + chunked build
-# uploads. Seed content is auto-created from lib/db/defaults on first boot.
+# uploads. Seed content is auto-created from data/seed on first boot.
 RUN mkdir -p /app/data /app/public/uploads && \
     chown -R nextjs:nodejs /app/data /app/public/uploads
 

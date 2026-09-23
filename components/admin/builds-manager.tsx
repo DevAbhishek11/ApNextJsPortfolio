@@ -1,8 +1,9 @@
 "use client";
 
+import { upload as uploadBlob } from "@vercel/blob/client";
 import { useMemo, useRef, useState } from "react";
 import {
-  Download, FileArchive, Loader2, Package, PackagePlus, Pause, Trash2, UploadCloud, XCircle,
+  Download, FileArchive, Loader2, Package, PackagePlus, Pause, Trash2, UploadCloud,
 } from "lucide-react";
 import { Badge, EmptyState } from "@/components/ui/surface";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ export default function BuildsManager({
   const [upload, setUpload] = useState<UploadState | null>(null);
   const [toDelete, setToDelete] = useState<Build | null>(null);
   const [dragging, setDragging] = useState(false);
-  const abortRef = useRef<{ uploadId: string | null; cancel: boolean }>({ uploadId: null, cancel: false });
+  const abortRef = useRef<{ uploadId: string | null; cancel: boolean; controller?: AbortController }>({ uploadId: null, cancel: false });
   const inputRef = useRef<HTMLInputElement>(null);
 
   const fileError = useMemo(() => {
@@ -85,45 +86,64 @@ export default function BuildsManager({
           projectId,
         }),
       });
-      const initJson = (await initRes.json()) as ApiResponse<{ uploadId: string }>;
+      const initJson = (await initRes.json()) as ApiResponse<{
+        uploadId: string; direct?: boolean; pathname?: string;
+      }>;
       if (!initRes.ok || !initJson.success) {
         throw new Error(initJson.success ? "Could not start upload" : initJson.error.message);
       }
       const uploadId = initJson.data.uploadId;
       abortRef.current.uploadId = uploadId;
 
-      // 2. chunks (sequential, with one retry per chunk)
-      const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
-      let sent = 0;
-      for (let i = 0; i < totalChunks; i++) {
-        if (abortRef.current.cancel) throw new Error("__cancelled__");
-        const blob = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        let okChunk = false;
-        for (let attempt = 0; attempt < 2 && !okChunk; attempt++) {
-          try {
-            const res = await fetch(`/api/builds/chunk?id=${encodeURIComponent(uploadId)}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/octet-stream" },
-              body: blob,
-            });
-            if (res.ok) okChunk = true;
-            else if (attempt === 1) {
-              const j = (await res.json().catch(() => null)) as ApiResponse<unknown> | null;
-              throw new Error(j && !j.success ? j.error.message : `Chunk ${i + 1} failed (${res.status})`);
+      // 2. On serverless, Vercel Blob's multipart uploader sends chunks
+      // directly from the browser (with retries, no function body limit).
+      // On a persistent Node server, retain the existing local chunk pipeline.
+      let blobUrl: string | undefined;
+      if (initJson.data.direct) {
+        if (!initJson.data.pathname) throw new Error("Missing upload destination.");
+        const controller = new AbortController();
+        abortRef.current.controller = controller;
+        const blob = await uploadBlob(initJson.data.pathname, file, {
+          access: "public", multipart: true,
+          handleUploadUrl: "/api/builds/blob", clientPayload: uploadId,
+          abortSignal: controller.signal,
+          onUploadProgress: ({ loaded }) => setUpload((u) => u ? { ...u, progress: loaded } : u),
+        });
+        blobUrl = blob.url;
+      } else {
+        const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+        let sent = 0;
+        for (let i = 0; i < totalChunks; i++) {
+          if (abortRef.current.cancel) throw new Error("__cancelled__");
+          const blob = file.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+          let okChunk = false;
+          for (let attempt = 0; attempt < 2 && !okChunk; attempt++) {
+            try {
+              const res = await fetch(`/api/builds/chunk?id=${encodeURIComponent(uploadId)}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/octet-stream" },
+                body: blob,
+              });
+              if (res.ok) okChunk = true;
+              else if (attempt === 1) {
+                const j = (await res.json().catch(() => null)) as ApiResponse<unknown> | null;
+                throw new Error(j && !j.success ? j.error.message : `Chunk ${i + 1} failed (${res.status})`);
+              }
+            } catch (err) {
+              if (attempt === 1) throw err;
             }
-          } catch (err) {
-            if (attempt === 1) throw err;
           }
+          sent += blob.size;
+          setUpload((u) => (u ? { ...u, progress: sent } : u));
         }
-        sent += blob.size;
-        setUpload((u) => (u ? { ...u, progress: sent } : u));
       }
+      if (abortRef.current.cancel) throw new Error("__cancelled__");
 
-      // 3. finalize
+      // 3. Verify and register the uploaded file in the CMS.
       const finRes = await fetch("/api/builds/finalize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId }),
+        body: JSON.stringify({ uploadId, ...(blobUrl ? { blobUrl } : {}) }),
       });
       const finJson = (await finRes.json()) as ApiResponse<Build>;
       if (!finRes.ok || !finJson.success) {
@@ -154,6 +174,7 @@ export default function BuildsManager({
 
   const cancelUpload = async () => {
     abortRef.current.cancel = true;
+    abortRef.current.controller?.abort();
     if (abortRef.current.uploadId) {
       await fetch(`/api/builds/upload?id=${encodeURIComponent(abortRef.current.uploadId)}`, {
         method: "DELETE",
@@ -188,8 +209,8 @@ export default function BuildsManager({
           <PackagePlus size={16} className="text-accent" /> Upload app build
         </h2>
         <p className="mt-1.5 text-xs leading-relaxed text-adm-faint">
-          APK, AAB, IPA, ZIP (and more) up to 150MB. Files stream in 8MB chunks with retry —
-          resilient on flaky connections.
+          APK, AAB, IPA, ZIP (and more) up to 150MB. Uploads use retryable chunks,
+          sent directly to Blob on serverless deployments.
         </p>
 
         <div className="mt-5 space-y-4">

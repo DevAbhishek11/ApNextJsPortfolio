@@ -14,6 +14,9 @@ services:
       # REQUIRED — generate with: openssl rand -base64 32
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in a .env file (see .env.example)}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      # Optional external stores. Without these, mounted JSON/upload volumes are used.
+      DATABASE_URL: ${DATABASE_URL:-}
+      BLOB_READ_WRITE_TOKEN: ${BLOB_READ_WRITE_TOKEN:-}
       # Optional contact-form email notifications (submissions are saved regardless):
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

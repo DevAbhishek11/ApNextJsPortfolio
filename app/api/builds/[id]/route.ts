@@ -1,6 +1,5 @@
-import { promises as fs } from "node:fs";
-import path from "node:path";
 import { handled, notFound, ok, unauthorized } from "@/lib/api";
+import { deleteStoredUpload } from "@/lib/blob-storage";
 import { getSessionUser } from "@/lib/auth/guard";
 import { buildsRepo } from "@/lib/db/repos";
 
@@ -11,11 +10,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
     const { id } = await params;
     const removed = await buildsRepo.remove(id);
     if (!removed) return notFound("Build not found.");
-    if (removed.url.startsWith("/uploads/")) {
-      await fs
-        .unlink(path.join(process.cwd(), "public", removed.url))
-        .catch(() => undefined);
-    }
+    await deleteStoredUpload(removed.url, "builds").catch((err) =>
+      console.error("[builds] stored file cleanup failed:", err),
+    );
     return ok({ deleted: true });
   });
 }

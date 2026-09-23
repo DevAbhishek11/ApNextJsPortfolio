@@ -5,7 +5,7 @@
  * simply overwriting the files in public/seed/ (or re-running an image
  * generator). Paths MUST stay stable because data/seed JSON references them.
  */
-import { writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import { writeFileSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -277,7 +277,6 @@ const jobs = [
 
 for (const job of jobs) {
   const dest = out(job.file);
-  const svgPath = `${dest}.svg`;
   try {
     const buf = await sharp(Buffer.from(job.svg)).jpeg({ quality: 88 }).toBuffer();
     writeFileSync(dest, buf);
