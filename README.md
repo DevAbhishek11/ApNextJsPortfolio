@@ -112,6 +112,13 @@ The login page's *"Can't sign in?"* panel lists the other common causes.
    local filesystem (`/data`, `/public/uploads`) and app-build uploads (up to 150MB via 8MB
    chunks) need a long-running Node process with **persistent disk and no per-request body
    limit**. One process, one filesystem.
+   **If you deploy to Vercel anyway:** set `JWT_SECRET` (≥ 16 chars) in *Project → Settings →
+   Environment Variables* and redeploy. The app detects Vercel and runs read-only from the
+   committed seed (`data/seed/*.seed.json`), with scratch writes going to ephemeral `/tmp`.
+   Admin login works with the seeded credentials. CMS edits and uploads are **not durable**
+   (they reset on cold start), and in-app password changes are disabled. To change the admin
+   password, run `node scripts/reset-admin.mjs --seed --password=NewSecret123` locally, then commit
+   `data/seed/users.seed.json` and redeploy.
 2. **Single-instance by design.** The JSON data layer uses atomic writes; running multiple
    replicas behind a load balancer is unsafe without an external shared volume mount.
 3. **Reverse proxy** in front (nginx/Caddy): allow `client_max_body_size` ≥ 12MB for chunk

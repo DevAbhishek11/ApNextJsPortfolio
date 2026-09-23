@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { handled, ok, parseBody, tooManyRequests, unauthorized } from "@/lib/api";
+import { fail, handled, ok, parseBody, tooManyRequests, unauthorized } from "@/lib/api";
 import { usersRepo } from "@/lib/db/repos";
-import { reseedCollection } from "@/lib/db/store";
+import { IS_SERVERLESS, reseedCollection } from "@/lib/db/store";
 import { verifyPassword } from "@/lib/auth/password";
 import {
-  SESSION_COOKIE, SESSION_MAX_AGE_DEFAULT, SESSION_MAX_AGE_REMEMBER, signSession,
+  SESSION_COOKIE, SESSION_MAX_AGE_DEFAULT, SESSION_MAX_AGE_REMEMBER, sessionSecret, signSession,
 } from "@/lib/auth/session";
 import { loginSchema } from "@/lib/validation/schemas";
 import { clientIp, clearRateLimit, rateLimit, sweep } from "@/lib/rate-limit";
@@ -24,6 +24,19 @@ export async function POST(request: NextRequest) {
     if (!byIp.ok) {
       return tooManyRequests(
         `Too many login attempts. Try again in ${byIp.retryAfterSeconds}s.`,
+      );
+    }
+
+    // Fail with an actionable message (instead of a generic 500 after a
+    // correct password) when the signing secret isn't configured.
+    try {
+      sessionSecret();
+    } catch {
+      console.error("[auth] JWT_SECRET is missing or shorter than 16 chars");
+      return fail(
+        500,
+        "CONFIG_ERROR",
+        "Server misconfigured: JWT_SECRET is not set (min 16 chars). Add it to the environment variables and redeploy.",
       );
     }
 
@@ -56,7 +69,11 @@ export async function POST(request: NextRequest) {
         "Invalid email or password.",
         user || input.email.length === 0
           ? undefined
-          : { hint: "If you previously changed the password, reset it with `npm run reset-admin` on the server." },
+          : {
+              hint: IS_SERVERLESS
+                ? "Serverless deploy detected: data lives in ephemeral storage and resets to the committed seed (data/seed/users.seed.json) on cold start."
+                : "If you previously changed the password, reset it with `npm run reset-admin` on the server.",
+            },
       );
     }
 
