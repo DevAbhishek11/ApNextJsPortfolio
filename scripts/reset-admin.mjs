@@ -7,6 +7,9 @@
  *   node scripts/reset-admin.mjs --password=NewPass123   # reset to a chosen password
  *   node scripts/reset-admin.mjs --email=me@x.com --password=NewPass123
  *   docker compose exec portfolio node scripts/reset-admin.mjs
+ *   node scripts/reset-admin.mjs --seed --password=NewPass123
+ *       # serverless (Vercel): write the COMMITTED seed data/seed/users.seed.json
+ *       # instead — commit + redeploy, since runtime data there is ephemeral.
  *
  * What it does: verifies/normalizes the admin record in data/users.json
  * (fresh bcrypt hash at cost 12, tokenVersion bumped → all sessions are
@@ -50,7 +53,10 @@ if (password.length < 8) {
   process.exit(1);
 }
 
-let users = await readJsonSafe(USERS_FILE);
+const SEED_MODE = process.argv.includes("--seed");
+const OUT_FILE = SEED_MODE ? SEED_FILE : USERS_FILE;
+
+let users = await readJsonSafe(OUT_FILE);
 if (!Array.isArray(users)) {
   // Runtime file missing/corrupt — fall back to the committed seed.
   users = (await readJsonSafe(SEED_FILE)) ?? (await readJsonSafe(SEED_FALLBACK)) ?? [];
@@ -93,8 +99,11 @@ if (target.role !== "admin") {
 }
 target.tokenVersion = (target.tokenVersion ?? 1) + 1; // invalidate all live sessions
 
-await fs.mkdir(DATA_DIR, { recursive: true });
-await fs.writeFile(USERS_FILE, JSON.stringify(users, null, 2) + "\n", "utf8");
+await fs.mkdir(path.dirname(OUT_FILE), { recursive: true });
+await fs.writeFile(OUT_FILE, JSON.stringify(users, null, 2) + "\n", "utf8");
+if (SEED_MODE) {
+  console.log(`✓ Seed updated: ${path.relative(process.cwd(), OUT_FILE)} — commit it and redeploy.`);
+}
 
 console.log("✓ Admin credentials reset.");
 console.log(`  email:    ${target.email}`);

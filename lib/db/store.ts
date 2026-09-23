@@ -1,4 +1,5 @@
 import { promises as fs } from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 // ---------------------------------------------------------------------------
@@ -8,13 +9,39 @@ import path from "node:path";
 // - Writes are serialized per-file through a promise-chain mutex and are
 //   atomic (write temp file → rename), so concurrent admin operations can't
 //   produce torn JSON.
-// - Runtime data files live in /data (gitignored). If a runtime file is
-//   missing, the committed seed example in /data/seed is copied over — which
-//   makes a fresh deploy self-seeding.
+// - Runtime data files live in /data (gitignored; or DATA_DIR / /tmp on
+//   serverless). If a runtime file is missing, the committed seed example in
+//   /data/seed is copied over — which makes a fresh deploy self-seeding. If the
+//   copy can't be made (read-only FS) the seed is served read-only.
 // ---------------------------------------------------------------------------
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const SEED_DIR = path.join(DATA_DIR, "seed");
+/**
+ * Serverless platforms (Vercel, Netlify, AWS Lambda) deploy the app to a
+ * READ-ONLY filesystem — only the OS temp dir (/tmp) is writable, and it is
+ * ephemeral + per-instance. Detect that so first-boot seeding doesn't silently
+ * fail (which used to leave the users table empty → every login rejected).
+ */
+export const IS_SERVERLESS = Boolean(
+  process.env.VERCEL ||
+    process.env.NETLIFY ||
+    process.env.AWS_LAMBDA_FUNCTION_NAME ||
+    process.env.LAMBDA_TASK_ROOT,
+);
+
+/** Committed, read-only seed examples (bundled with the deployment). */
+const SEED_DIR = path.join(process.cwd(), "data", "seed");
+/**
+ * Writable runtime data dir. Override with DATA_DIR (e.g. a mounted volume).
+ * On serverless we fall back to /tmp so reads/writes work within an instance.
+ */
+const DATA_DIR =
+  process.env.DATA_DIR ??
+  (IS_SERVERLESS ? path.join(os.tmpdir(), "apportfolio", "data") : path.join(process.cwd(), "data"));
+const UPLOADS_DIR =
+  process.env.UPLOADS_DIR ??
+  (IS_SERVERLESS
+    ? path.join(os.tmpdir(), "apportfolio", "uploads")
+    : path.join(process.cwd(), "public", "uploads"));
 /**
  * Deploy-safe seed fallback. In Docker / standalone servers the runtime
  * `data/` directory is a mounted volume (empty on first boot) that shadows any
@@ -76,6 +103,7 @@ async function ensureSeeded(name: string): Promise<void> {
 export async function reseedCollection(name: string): Promise<boolean> {
   const target = dataPath(name);
   const seedName = name.replace(/\.json$/, ".seed.json");
+  await fs.mkdir(DATA_DIR, { recursive: true }).catch(() => undefined);
   for (const source of [path.join(SEED_DIR, seedName), path.join(SEED_FALLBACK_DIR, seedName)]) {
     try {
       await fs.copyFile(source, target);
@@ -92,9 +120,27 @@ export async function readJson<T>(name: string, fallback: T): Promise<T> {
     const raw = await fs.readFile(dataPath(name), "utf8");
     return JSON.parse(raw) as T;
   } catch (err) {
+    // Runtime copy missing/corrupt (e.g. read-only filesystem, no writable
+    // DATA_DIR) — serve the committed seed read-only instead of an empty table.
+    const seeded = await readSeed<T>(name);
+    if (seeded !== null) {
+      console.warn(`[db] ${name} unreadable (${(err as NodeJS.ErrnoException)?.code ?? err}) — serving committed seed`);
+      return seeded;
+    }
     console.error(`[db] read failed for ${name} — using fallback:`, err);
     return fallback;
   }
+}
+
+/** Parse the committed seed for a collection, or null if none is available. */
+export async function readSeed<T>(name: string): Promise<T | null> {
+  const seedName = name.replace(/\.json$/, ".seed.json");
+  for (const source of [path.join(SEED_DIR, seedName), path.join(SEED_FALLBACK_DIR, seedName)]) {
+    try {
+      return JSON.parse(await fs.readFile(source, "utf8")) as T;
+    } catch { /* try next */ }
+  }
+  return null;
 }
 
 /** Atomically write a JSON data file (serialized per file). */
@@ -148,9 +194,9 @@ export async function updateJson<T>(
 export const paths = {
   dataDir: DATA_DIR,
   tmpDir: TMP_DIR,
-  uploads: path.join(process.cwd(), "public", "uploads"),
-  mediaUploads: path.join(process.cwd(), "public", "uploads", "media"),
-  buildUploads: path.join(process.cwd(), "public", "uploads", "builds"),
+  uploads: UPLOADS_DIR,
+  mediaUploads: path.join(UPLOADS_DIR, "media"),
+  buildUploads: path.join(UPLOADS_DIR, "builds"),
 };
 
 export async function ensureDir(dir: string): Promise<void> {

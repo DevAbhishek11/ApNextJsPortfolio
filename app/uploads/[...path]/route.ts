@@ -3,6 +3,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { Readable } from "node:stream";
+import { paths } from "@/lib/db/store";
 
 // ---------------------------------------------------------------------------
 // Runtime uploads handler — serves files created by the CMS at runtime
@@ -39,7 +40,7 @@ const ATTACHMENT_EXT = new Set(["zip", "apk", "ipa"]);
 
 function safeResolve(segments: string[]): string | null {
   if (segments.length === 0) return null;
-  const root = path.resolve(process.cwd(), "public", "uploads");
+  const root = path.resolve(paths.uploads);
   const decoded: string[] = [];
   for (const s of segments) {
     let d: string;

@@ -1,4 +1,5 @@
-import { handled, ok, parseBody, unauthorized, badRequest } from "@/lib/api";
+import { conflict, handled, ok, parseBody, unauthorized, badRequest } from "@/lib/api";
+import { IS_SERVERLESS } from "@/lib/db/store";
 import { getSessionUser } from "@/lib/auth/guard";
 import { usersRepo } from "@/lib/db/repos";
 import { hashPassword, verifyPassword } from "@/lib/auth/password";
@@ -12,6 +13,14 @@ export async function POST(request: Request) {
   return handled(async () => {
     const user = await getSessionUser();
     if (!user) return unauthorized();
+
+    // On serverless the data dir is ephemeral and per-instance: a changed
+    // password would randomly work/not work and vanish on the next cold start.
+    if (IS_SERVERLESS && !process.env.DATA_DIR) {
+      return conflict(
+        "Password changes can't be persisted on this serverless deployment. Run `node scripts/reset-admin.mjs --seed --password=YourNewPass` locally, commit data/seed/users.seed.json and redeploy.",
+      );
+    }
 
     const limit = rateLimit(`pwd:${user.id}:${clientIp(request)}`, 5, 10 * 60_000);
     if (!limit.ok) {
