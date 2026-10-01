@@ -35,7 +35,8 @@ export default async function ContactPage() {
   ];
 
   return (
-    <>
+    // Clip off-canvas reveal animations without creating a horizontal scroll container.
+    <div className="min-w-0 overflow-x-clip [overflow-wrap:anywhere]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -54,8 +55,8 @@ export default async function ContactPage() {
       />
       <Section>
         <Container>
-          <div className="grid gap-10 lg:grid-cols-[400px_1fr] lg:gap-14">
-            <div>
+          <div className="grid min-w-0 grid-cols-1 gap-10 lg:grid-cols-[400px_minmax(0,1fr)] lg:gap-14">
+            <div className="min-w-0">
               <Reveal variant="rise">
                 <h2 className="text-xl font-semibold tracking-tight text-ink">
                   Prefer a direct line?
@@ -69,12 +70,12 @@ export default async function ContactPage() {
                   const Icon = card.icon;
                   const inner = (
                     <>
-                      <div className="rounded-xl bg-accent-soft p-2.5 text-accent">
+                      <div className="shrink-0 rounded-xl bg-accent-soft p-2.5 text-accent">
                         <Icon size={17} />
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 flex-1">
                         <p className="text-xs font-medium text-faint">{card.label}</p>
-                        <p className="truncate text-sm font-semibold text-ink">{card.value}</p>
+                        <p className="text-sm font-semibold text-ink [overflow-wrap:anywhere]">{card.value}</p>
                       </div>
                     </>
                   );
@@ -103,7 +104,7 @@ export default async function ContactPage() {
                   <p className="mt-1 text-[0.84rem] leading-relaxed text-muted">
                     I&apos;m most active on LinkedIn and GitHub — code speaks louder than bios.
                   </p>
-                  <div className="mt-3.5 flex gap-2">
+                  <div className="mt-3.5 flex flex-wrap gap-2">
                     {profile.socials.linkedin && (
                       <a
                         href={profile.socials.linkedin}
@@ -129,8 +130,8 @@ export default async function ContactPage() {
               </Reveal>
             </div>
 
-            <Reveal variant="right" delay={0.1}>
-              <div className="rounded-card border border-border bg-surface p-6 shadow-card sm:p-8">
+            <Reveal variant="right" delay={0.1} className="min-w-0">
+              <div className="min-w-0 rounded-card border border-border bg-surface p-5 shadow-card sm:p-8">
                 <h2 className="text-xl font-semibold tracking-tight text-ink">Send a message</h2>
                 <p className="mt-2 text-sm text-muted">
                   Typical response time: within one business day, IST.
@@ -143,6 +144,6 @@ export default async function ContactPage() {
           </div>
         </Container>
       </Section>
-    </>
+    </div>
   );
 }

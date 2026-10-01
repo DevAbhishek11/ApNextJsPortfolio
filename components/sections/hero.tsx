@@ -111,10 +111,10 @@ export default function Hero({
         <div className="max-w-3xl">
           <div
             data-hero="badge"
-            className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3.5 py-1.5 text-xs font-medium text-muted backdrop-blur"
+            className="inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-surface/80 px-3.5 py-1.5 text-xs font-medium text-muted backdrop-blur"
           >
-            <span className="animate-pulse-dot h-2 w-2 rounded-full bg-emerald-500" />
-            {availability}
+            <span className="animate-pulse-dot h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+            <span className="min-w-0">{availability}</span>
           </div>
 
           <h1
@@ -129,7 +129,7 @@ export default function Hero({
 
           <p
             data-hero="role"
-            className="mt-5 h-8 text-xl font-medium tracking-tight text-ink sm:text-2xl"
+            className="mt-5 min-h-8 text-xl font-medium tracking-tight text-ink sm:text-2xl"
             aria-label={`Roles: ${roles.join(", ")}`}
           >
             <TypedRoles roles={roles.length ? roles : ["Full Stack Developer"]} />
@@ -157,8 +157,8 @@ export default function Hero({
               <Download size={16} />
               {resumeUrl ? "Download Resume" : "Contact Me"}
             </a>
-            <span className="inline-flex items-center gap-1.5 text-sm text-faint">
-              <MapPin size={14} /> {location}
+            <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 text-sm text-faint">
+              <MapPin size={14} className="shrink-0" /> <span className="min-w-0">{location}</span>
             </span>
           </div>
         </div>

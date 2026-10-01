@@ -23,11 +23,11 @@ export default function ExperiencePreview({ entries }: { entries: ExperienceEntr
             <Reveal key={entry.id} variant={i % 2 === 0 ? "left" : "right"}>
               <article className="relative rounded-card border border-border bg-surface p-6 shadow-card transition-all duration-250 hover:-translate-y-0.5 hover:shadow-card-hover sm:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex items-start gap-4">
-                    <div className="mt-0.5 rounded-xl bg-accent-soft p-2.5 text-accent">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <div className="mt-0.5 shrink-0 rounded-xl bg-accent-soft p-2.5 text-accent">
                       <Briefcase size={18} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="font-semibold tracking-tight text-ink">{entry.role}</h3>
                       <p className="mt-0.5 text-sm font-medium text-muted">
                         {entry.company} · {entry.location}

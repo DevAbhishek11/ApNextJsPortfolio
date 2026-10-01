@@ -167,7 +167,18 @@ npm run test:e2e    # 102 checks against a running instance (BASE_URL override s
 npm run test:store  # real Postgres WASM contract + serverless fail-closed checks
 npm run typecheck
 npm run build       # production build + type check (VERCEL=1 npm run build also works)
+
+# Browser regression tests against a running production instance:
+npx playwright install --with-deps chromium  # first-time setup
+npm run test:responsive                      # BASE_URL override supported
 ```
+
+The responsive suite covers **Home, About, and Contact only** with 210 Chromium
+browser tests at 14 viewports (320–1440px), including mobile portrait/landscape,
+light/dark themes and reduced motion. It checks overflow throughout scrolling,
+uncropped email CTAs, mobile navigation/search, image loading, and contact-form
+validation/success/error states. Form submissions are mocked in this suite so
+it does not write messages to a live CMS; the e2e harness tests the real API.
 
 The e2e harness covers every public page, SEO surfaces, auth flows (login/logout,
 invalid sessions on other devices after password change, lockout recovery), rate limiting,
@@ -206,6 +217,7 @@ public/uploads/        local/Docker runtime uploads (gitignored)
 | `npm run build` / `start` | Production build & serve |
 | `npm run test:e2e` | 102-check end-to-end suite against the running server |
 | `npm run test:store` | PostgreSQL + missing-config unit tests |
+| `npm run test:responsive` | Home/About/Contact browser overflow and interaction tests |
 | `npm run typecheck` | TypeScript strict check |
 | `npm run lint` | ESLint |
 | `npm run seed` | Seed missing local JSON files |

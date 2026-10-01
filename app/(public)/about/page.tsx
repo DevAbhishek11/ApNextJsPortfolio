@@ -40,7 +40,8 @@ export default async function AboutPage() {
   const paragraphs = profile.bio.split(/\n+/).filter(Boolean);
 
   return (
-    <>
+    // Clip off-canvas reveal animations without creating a horizontal scroll container.
+    <div className="min-w-0 overflow-x-clip [overflow-wrap:anywhere]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: jsonLdScript(personJsonLd(profile, settings.site)) }}
@@ -54,7 +55,7 @@ export default async function AboutPage() {
       {/* Bio */}
       <Section>
         <Container>
-          <div className="grid items-start gap-10 lg:grid-cols-[300px_1fr] lg:gap-14">
+          <div className="grid min-w-0 grid-cols-1 items-start gap-10 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-14">
             <Reveal variant="scale">
               <div className="mx-auto w-full max-w-[300px] lg:sticky lg:top-24">
                 <div className="relative aspect-square overflow-hidden rounded-card border border-border bg-surface-2 shadow-card">
@@ -69,8 +70,8 @@ export default async function AboutPage() {
                 </div>
                 <div className="mt-4 rounded-card border border-border bg-surface p-4 shadow-card">
                   <p className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <span className="animate-pulse-dot h-2 w-2 rounded-full bg-emerald-500" />
-                    {profile.availability}
+                    <span className="animate-pulse-dot h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
+                    <span className="min-w-0">{profile.availability}</span>
                   </p>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted">{profile.location}</p>
                 </div>
@@ -85,7 +86,7 @@ export default async function AboutPage() {
                 )}
               </div>
             </Reveal>
-            <div>
+            <div className="min-w-0">
               <Reveal variant="rise">
                 <h2 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
                   Hi — I&apos;m Abhishek
@@ -139,12 +140,12 @@ export default async function AboutPage() {
             {certifications.map((cert) => (
               <div
                 key={cert.id}
-                className="flex gap-4 rounded-card border border-border bg-surface p-5 shadow-card transition-all duration-250 hover:-translate-y-0.5 hover:shadow-card-hover"
+                className="flex min-w-0 gap-4 rounded-card border border-border bg-surface p-5 shadow-card transition-all duration-250 hover:-translate-y-0.5 hover:shadow-card-hover"
               >
-                <div className="rounded-xl bg-accent-soft p-2.5 text-accent">
+                <div className="shrink-0 self-start rounded-xl bg-accent-soft p-2.5 text-accent">
                   <BadgeCheck size={20} />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3 className="font-semibold leading-snug tracking-tight text-ink">
                     {cert.title}
                   </h3>
@@ -169,12 +170,12 @@ export default async function AboutPage() {
                 {education.map((edu) => (
                   <div
                     key={edu.id}
-                    className="flex gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
+                    className="flex min-w-0 gap-4 rounded-card border border-border bg-surface p-5 shadow-card"
                   >
-                    <div className="rounded-xl bg-accent-soft p-2.5 text-accent">
+                    <div className="shrink-0 self-start rounded-xl bg-accent-soft p-2.5 text-accent">
                       <GraduationCap size={20} />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="font-semibold leading-snug tracking-tight text-ink">
                         {edu.degree}
                       </h3>
@@ -223,7 +224,7 @@ export default async function AboutPage() {
         </Container>
       </Section>
 
-      <CTABanner email={profile.email} />
-    </>
+      <CTABanner email={profile.email} wrapEmail />
+    </div>
   );
 }
