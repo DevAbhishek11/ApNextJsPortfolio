@@ -31,7 +31,8 @@ export default async function HomePage() {
   const { profile } = settings;
 
   return (
-    <>
+    // Clip off-canvas reveal animations without creating a horizontal scroll container.
+    <div className="min-w-0 overflow-x-clip [overflow-wrap:anywhere]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -51,7 +52,7 @@ export default async function HomePage() {
       {projects.length > 0 && <FeaturedProjects projects={projects} />}
       <ExperiencePreview entries={experience} />
       <LatestPosts posts={posts} />
-      <CTABanner email={profile.email} />
-    </>
+      <CTABanner email={profile.email} wrapEmail />
+    </div>
   );
 }

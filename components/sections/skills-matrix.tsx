@@ -6,7 +6,7 @@ import type { SkillGroup } from "@/lib/types";
 
 function LevelDots({ level }: { level: number }) {
   return (
-    <span className="flex items-center gap-1" aria-label={`Proficiency ${level} of 5`}>
+    <span className="flex shrink-0 items-center gap-1" aria-label={`Proficiency ${level} of 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <span
           key={i}
@@ -43,7 +43,7 @@ export default function SkillsMatrix({ groups }: { groups: SkillGroup[] }) {
                     key={skill.name}
                     className="flex items-center justify-between gap-4 border-b border-border/60 pb-2.5 last:border-none last:pb-0"
                   >
-                    <span className="text-sm text-muted">{skill.name}</span>
+                    <span className="min-w-0 text-sm text-muted">{skill.name}</span>
                     <LevelDots level={skill.level} />
                   </li>
                 ))}

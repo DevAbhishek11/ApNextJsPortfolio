@@ -2,8 +2,16 @@ import { ArrowRight, Mail } from "lucide-react";
 import { Container, Section } from "@/components/ui/container";
 import { Reveal } from "@/components/animation/reveal";
 import { ButtonLink } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export default function CTABanner({ email }: { email: string }) {
+export default function CTABanner({
+  email,
+  wrapEmail = false,
+}: {
+  email: string;
+  // Opt in on Home/About only; keep other pages' existing CTA presentation.
+  wrapEmail?: boolean;
+}) {
   return (
     <Section>
       <Container>
@@ -34,9 +42,15 @@ export default function CTABanner({ email }: { email: string }) {
                 </ButtonLink>
                 <a
                   href={`mailto:${email}`}
-                  className="inline-flex h-12 items-center gap-2 rounded-control border border-white/25 px-6 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/50"
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-control border border-white/25 text-[0.95rem] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:border-white/50",
+                    wrapEmail
+                      ? "min-h-12 max-w-full justify-center px-4 py-3 sm:px-6"
+                      : "h-12 px-6",
+                  )}
                 >
-                  <Mail size={16} /> {email}
+                  <Mail size={16} className={wrapEmail ? "shrink-0" : undefined} />
+                  {wrapEmail ? <span className="min-w-0 [overflow-wrap:anywhere]">{email}</span> : email}
                 </a>
               </div>
             </div>

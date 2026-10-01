@@ -10,6 +10,9 @@ import { useToast } from "@/components/ui/toast";
 import { contactSchema, type ContactInput } from "@/lib/validation/schemas";
 import type { ApiResponse } from "@/lib/types";
 
+// Override the shared 14px field size only here: iOS zooms focused fields below 16px.
+const contactFieldClassName = "min-w-0 text-base!";
+
 export default function ContactForm() {
   const toast = useToast();
   const [done, setDone] = useState(false);
@@ -62,22 +65,29 @@ export default function ContactForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="relative min-w-0 space-y-5">
       {/* Honeypot — invisible to humans, irresistible to bots */}
-      <div aria-hidden className="absolute -left-[9999px] top-0 opacity-0">
+      <div aria-hidden className="sr-only">
         <label>
           Website
           <input tabIndex={-1} autoComplete="off" {...register("website")} />
         </label>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid min-w-0 grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="Name" required error={errors.name?.message} htmlFor="cf-name">
-          <Input id="cf-name" invalid={!!errors.name} placeholder="Your name" {...register("name")} />
+          <Input
+            id="cf-name"
+            className={contactFieldClassName}
+            invalid={!!errors.name}
+            placeholder="Your name"
+            {...register("name")}
+          />
         </Field>
         <Field label="Email" required error={errors.email?.message} htmlFor="cf-email">
           <Input
             id="cf-email"
+            className={contactFieldClassName}
             type="email"
             invalid={!!errors.email}
             placeholder="you@company.com"
@@ -88,6 +98,7 @@ export default function ContactForm() {
       <Field label="Subject" required error={errors.subject?.message} htmlFor="cf-subject">
         <Input
           id="cf-subject"
+          className={contactFieldClassName}
           invalid={!!errors.subject}
           placeholder="What's this about?"
           {...register("subject")}
@@ -102,6 +113,7 @@ export default function ContactForm() {
       >
         <Textarea
           id="cf-message"
+          className={contactFieldClassName}
           rows={7}
           invalid={!!errors.message}
           placeholder="Tell me about your project, question, or opportunity…"

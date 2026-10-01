@@ -29,6 +29,8 @@ export function openSearch() {
 
 export default function Navbar({ name }: { name: string }) {
   const pathname = usePathname();
+  // Keep this responsive-menu fix scoped to the three requested pages.
+  const responsiveMenu = pathname === "/" || pathname === "/about" || pathname === "/contact";
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -220,8 +222,10 @@ export default function Navbar({ name }: { name: string }) {
           className={cn(
             "absolute inset-x-4 top-20 origin-top rounded-3xl border p-6 transition-all duration-300",
             "glass-strong",
+            responsiveMenu && "max-h-[calc(100dvh-6rem)] overflow-y-auto overscroll-contain",
             open ? "translate-y-0 scale-100 opacity-100" : "-translate-y-4 scale-[0.97] opacity-0",
           )}
+          data-lenis-prevent={responsiveMenu ? "" : undefined}
           role="dialog"
           aria-modal="true"
           aria-label="Navigation menu"
@@ -270,6 +274,7 @@ export default function Navbar({ name }: { name: string }) {
             style={{ transitionDelay: open ? `${60 + links.length * 40}ms` : "0ms" }}
             className={cn(
               "mt-4 flex items-center justify-between border-t border-border pt-4 transition-all duration-300",
+              responsiveMenu && "flex-wrap gap-3",
               open ? "translate-y-0 opacity-100" : "translate-y-3 opacity-0",
             )}
           >

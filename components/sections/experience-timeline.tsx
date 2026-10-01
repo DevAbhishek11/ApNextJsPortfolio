@@ -107,7 +107,7 @@ export default function ExperienceTimeline({ entries }: { entries: ExperienceEnt
             />
             <article
               className={cn(
-                "rounded-card border border-border bg-surface p-6 text-left shadow-card transition-shadow duration-250 hover:shadow-card-hover",
+                "min-w-0 rounded-card border border-border bg-surface p-4 text-left shadow-card transition-shadow duration-250 hover:shadow-card-hover sm:p-6",
               )}
             >
               <p className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
